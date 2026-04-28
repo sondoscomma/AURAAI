@@ -2,7 +2,7 @@
 import { Link, NavLink } from "react-router-dom";
 import GradientButton from ".//GradientButton";
 import type { JSX } from "react";
-import logo1 from "../assets/image/logo1.png";
+import logo1 from "../assets/image/iconeAURA.png";
 
 export default function Navbar(): JSX.Element {
   const linkClass =
