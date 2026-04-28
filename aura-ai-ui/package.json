@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-"homepage": "https://sondoscomma.github.io/AURAAI",
+"homepage": "https://sondoscomma.github.ion/AURAAI",
 "scripts": {
   "dev": "vite",
   "build": "tsc -b && vite build",
