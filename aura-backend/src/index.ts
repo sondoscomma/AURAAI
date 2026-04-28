@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db";
-
+import modelRoutes from "./routes/model.routes";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 
@@ -22,6 +22,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
+app.use("/api/models", modelRoutes);
 
 const PORT = Number(process.env.PORT || 5000);
 

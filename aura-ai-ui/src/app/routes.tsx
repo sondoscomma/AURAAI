@@ -14,6 +14,10 @@ import Pricing from "../components/Pricing";
 import Features from "../components/Features";
 import Contact from "../components/Contact";
 import Generation from "../pages/Generation";   
+import UploadYourModel from "../pages/UploadYourModel";
+import GenerateAiModel from "../pages/GenerateAiModel";
+ import AuraModels from "../pages/AuraModels";
+ import ProfileSettings from "../pages/ProfileSettings";
 
 export const routes: RouteObject[] = [
   {
@@ -27,7 +31,10 @@ export const routes: RouteObject[] = [
       { path: "/how-it-works", element: <HowItwork /> },
       { path: "/features", element: <Features /> },
       { path: "/contact", element: <Contact /> },
-      
+      { path: "/app/upload-your-model", element: <UploadYourModel /> },
+      { path: "/app/generate-ai-model", element: <GenerateAiModel /> },
+      { path: "/app/aura-models", element: <AuraModels /> },
+      { path: "/app/profile", element: <ProfileSettings /> },
     ],
   },
   {
