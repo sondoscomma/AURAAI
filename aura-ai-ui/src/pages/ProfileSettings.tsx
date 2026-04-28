@@ -148,7 +148,7 @@ export default function ProfileSettings(): JSX.Element {
             gap: 12,
           }}
         >
-          <Avatar size={34} src={avatar} />
+          <Avatar size={34} src={avatar??undefined} />
           <div>
             <div style={{ fontSize: 12, fontWeight: 700 }}>
               {firstName} {lastName}
@@ -241,7 +241,7 @@ export default function ProfileSettings(): JSX.Element {
               <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
                 <Panel>
                   <div style={{ textAlign: "center" }}>
-                    <Avatar size={86} src={avatar} />
+                    <Avatar size={86} src={avatar??undefined} />
                     <h3 style={{ margin: "16px 0 0" }}>
                       {firstName} {lastName}
                     </h3>
