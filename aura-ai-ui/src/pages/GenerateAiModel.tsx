@@ -97,7 +97,7 @@ async function handleGenerate(): Promise<void> {
     setIsGenerating(true);
     setError("");
 
-    const res = await fetch("http://localhost:5000/api/models/generate", {
+    const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
