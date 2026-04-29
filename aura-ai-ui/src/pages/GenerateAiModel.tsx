@@ -16,7 +16,7 @@ const COLORS = {
 // Brand Fonts
 const FONTS = {
   primary: "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
-  secondary: "'General Sans', 'Segoe UI', system-ui, sans-serif"
+  secondary: "'General Sans Variable', 'Segoe UI', system-ui, sans-serif"
 };
 
 type Gender = "Female" | "Male";
@@ -156,6 +156,17 @@ export default function GenerateAiModel(): JSX.Element {
     setAgeRange(e.target.value);
   };
 
+  const handleDownload = () => {
+    if (!generatedImage) return;
+    
+    const link = document.createElement('a');
+    link.href = generatedImage;
+    link.download = `aura-ai-model-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div
       style={{
@@ -262,7 +273,7 @@ export default function GenerateAiModel(): JSX.Element {
         style={{
           flex: 1,
           display: "grid",
-          gridTemplateColumns: "280px 1fr 320px",
+          gridTemplateColumns: "280px 1fr 260px",
           overflow: "hidden",
         }}
       >
@@ -380,6 +391,7 @@ export default function GenerateAiModel(): JSX.Element {
                       fontSize: 14,
                       lineHeight: "20px",
                       fontWeight: 400,
+                      fontFamily: FONTS.secondary,
                     }}
                   >
                     Describe your perfect model and watch AURA create it.
@@ -419,7 +431,7 @@ export default function GenerateAiModel(): JSX.Element {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 320px",
+                gridTemplateColumns: "1fr 380px",
                 gap: 32,
               }}
             >
@@ -482,6 +494,7 @@ export default function GenerateAiModel(): JSX.Element {
                         fontSize: 12,
                         color: "rgba(237,237,237,0.5)",
                         fontWeight: 500,
+                        fontFamily: FONTS.secondary,
                       }}
                     >
                       Quick add:
@@ -619,7 +632,7 @@ export default function GenerateAiModel(): JSX.Element {
                 style={{
                   border: "1px solid rgba(237,237,237,0.12)",
                   borderRadius: 16,
-                  minHeight: 560,
+                  minHeight: 680,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -634,16 +647,56 @@ export default function GenerateAiModel(): JSX.Element {
                 }}
               >
                 {generatedImage ? (
-                  <img
-                    src={generatedImage}
-                    alt="Generated AI Model"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      borderRadius: 12,
-                    }}
-                  />
+                  <>
+                    <img
+                      src={generatedImage}
+                      alt="Generated AI Model"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        borderRadius: 12,
+                        maxHeight: "500px",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 12,
+                        marginTop: 16,
+                      }}
+                    >
+                      <button
+                        onClick={handleDownload}
+                        style={{
+                          height: 44,
+                          padding: "0 24px",
+                          borderRadius: 10,
+                          border: "1px solid rgba(198,166,247,0.3)",
+                          background: "rgba(198,166,247,0.15)",
+                          color: COLORS.platinum,
+                          cursor: "pointer",
+                          fontSize: 13,
+                          fontWeight: 600,
+                          fontFamily: FONTS.primary,
+                          transition: "all 0.3s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(198,166,247,0.25)";
+                          e.currentTarget.style.borderColor = COLORS.secondary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(198,166,247,0.15)";
+                          e.currentTarget.style.borderColor = "rgba(198,166,247,0.3)";
+                        }}
+                      >
+                        ⬇ Download
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div
@@ -678,6 +731,7 @@ export default function GenerateAiModel(): JSX.Element {
                           fontSize: 13,
                           marginTop: 8,
                           lineHeight: "20px",
+                          fontFamily: FONTS.secondary,
                         }}
                       >
                         {isGenerating ? (
@@ -702,6 +756,7 @@ export default function GenerateAiModel(): JSX.Element {
                             color: COLORS.error,
                             fontSize: 12,
                             fontWeight: 500,
+                            fontFamily: FONTS.secondary,
                           }}
                         >
                           {error}
@@ -788,7 +843,7 @@ export default function GenerateAiModel(): JSX.Element {
           style={{
             background: COLORS.background,
             borderLeft: "1px solid rgba(83,44,134,0.2)",
-            padding: "32px 24px",
+            padding: "32px 20px",
             display: "flex",
             flexDirection: "column",
             overflowY: "auto",
@@ -843,6 +898,7 @@ export default function GenerateAiModel(): JSX.Element {
                 color: "rgba(237,237,237,0.4)",
                 fontSize: 12,
                 paddingTop: 10,
+                fontFamily: FONTS.secondary,
               }}
             >
               No generated models yet
@@ -943,6 +999,7 @@ function Step(props: StepProps): JSX.Element {
             fontSize: 11,
             color: "rgba(237,237,237,0.45)",
             marginTop: 2,
+            fontFamily: FONTS.secondary,
           }}
         >
           {props.subtitle}
@@ -1226,6 +1283,7 @@ function History(props: HistoryProps): JSX.Element {
             fontSize: 11,
             color: "rgba(237,237,237,0.45)",
             marginTop: 3,
+            fontFamily: FONTS.secondary,
           }}
         >
           {props.time}
