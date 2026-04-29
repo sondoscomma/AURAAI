@@ -1,15 +1,41 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import type { JSX } from "react";
-import { useState } from "react";
-import { saveUser, setLoggedIn } from "../components/localAuth";
+
+const API_URL = "https://auraai-backend-6a8n.onrender.com";
 
 export default function Signup(): JSX.Element {
   const nav = useNavigate();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const res = await fetch(`${API_URL}/api/auth/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Signup failed");
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    nav("/app/generation");
+  }
 
   return (
     <div className="mx-auto max-w-md">
@@ -17,13 +43,25 @@ export default function Signup(): JSX.Element {
         <h1 className="text-2xl font-semibold">Create account</h1>
         <p className="mt-1 text-sm text-neutral-400">Start your Aura workspace.</p>
 
-        <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-6 space-y-4" onSubmit={handleSignup}>
           <Field label="Name">
-            <Input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </Field>
+
           <Field label="Email">
-            <Input type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </Field>
+
           <Field label="Password">
             <Input
               type="password"
@@ -33,16 +71,7 @@ export default function Signup(): JSX.Element {
             />
           </Field>
 
-          <Button
-            type="submit"
-            className="w-full"
-            onClick={() => {
-              if (!name || !email || !password) return alert("Please fill all fields");
-              saveUser({ name, email, password });
-              setLoggedIn(email);
-              nav("/app/generation");
-            }}
-          >
+          <Button type="submit" className="w-full">
             Sign up
           </Button>
         </form>

@@ -1,54 +1,94 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { z } from "zod";
-import { User } from "../models/User";
+import User from "../models/User";
+import { signToken } from "../utils/jwt";
 
 const router = Router();
 
-const signupSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
 router.post("/signup", async (req, res) => {
-  const parsed = signupSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: "Invalid input", issues: parsed.error.issues });
+  try {
+    const { name, email, password } = req.body;
 
-  const { email, password } = parsed.data;
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
+    }
 
-  const existing = await User.findOne({ email });
-  if (existing) return res.status(409).json({ message: "Email already exists" });
+    const existingUser = await User.findOne({ email });
 
-  const passwordHash = await bcrypt.hash(password, 10);
-  const user = await User.create({ email, passwordHash });
+    if (existingUser) {
+      return res.status(409).json({
+        message: "User already exists",
+      });
+    }
 
-  // optional: auto login after signup
-  const token = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  res.json({ token, user: { id: user._id, email: user.email } });
-});
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+    const token = signToken(user._id.toString());
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Signup failed",
+    });
+  }
 });
 
 router.post("/login", async (req, res) => {
-  const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: "Invalid input" });
+  try {
+    const { email, password } = req.body;
 
-  const { email, password } = parsed.data;
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const user = await User.findOne({ email });
 
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
 
-  const token = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
-  res.json({ token, user: { id: user._id, email: user.email } });
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    const token = signToken(user._id.toString());
+
+    return res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Login failed",
+    });
+  }
 });
 
 export default router;

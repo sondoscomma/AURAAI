@@ -2,6 +2,23 @@ import type { JSX, CSSProperties, ReactNode, ChangeEvent } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Brand Colors
+const COLORS = {
+  primary: '#532C86',        // Indigo Velvet
+  secondary: '#C6A6F7',      // Mauve
+  background: '#0d0d0d',     // Dark background
+  onyx: '#161616',           // Onyx
+  platinum: '#EDEDED',       // Platinum
+  deepTwilight: '#2B144C',  // Deep twilight
+  error: '#ff7b7b'           // Error red
+};
+
+// Brand Fonts
+const FONTS = {
+  primary: "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+  secondary: "'General Sans', 'Segoe UI', system-ui, sans-serif"
+};
+
 type Gender = "Female" | "Male";
 
 interface HistoryItem {
@@ -70,9 +87,9 @@ export default function GenerateAiModel(): JSX.Element {
   const [clothingStyle, setClothingStyle] = useState("Modern Elegant");
   const [pose, setPose] = useState("Standing Straight");
   const [history, setHistory] = useState<{ title: string; time: string }[]>([]);
-const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-const [isGenerating, setIsGenerating] = useState(false);
-const [error, setError] = useState("");
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
   const ageRangeOptions = [
     "18 - 21 years",
     "20 - 25 years",
@@ -92,48 +109,49 @@ const [error, setError] = useState("");
     );
   }
 
-async function handleGenerate(): Promise<void> {
-  try {
-    setIsGenerating(true);
-    setError("");
+  async function handleGenerate(): Promise<void> {
+    try {
+      setIsGenerating(true);
+      setError("");
 
-    const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-        gender,
-        ageRange,
-        ethnicity,
-        bodyType,
-        clothingStyle,
-        pose,
-      }),
-    });
+      const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          gender,
+          ageRange,
+          ethnicity,
+          bodyType,
+          clothingStyle,
+          pose,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.message || "Generation failed");
+      if (!res.ok) {
+        throw new Error(data.message || "Generation failed");
+      }
+
+      const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
+      setGeneratedImage(imageUrl);
+
+      const newModel: HistoryItem = {
+        title: `${gender} ${ethnicity} Model`,
+        time: "Just now",
+      };
+
+      setHistory((prev) => [newModel, ...prev]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setIsGenerating(false);
     }
-
-    const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
-    setGeneratedImage(imageUrl);
-
-    const newModel: HistoryItem = {
-      title: `${gender} ${ethnicity} Model`,
-      time: "Just now",
-    };
-
-    setHistory((prev) => [newModel, ...prev]);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Generation failed");
-  } finally {
-    setIsGenerating(false);
   }
-}
+
   const handleAgeRangeChange = (e: ChangeEvent<HTMLSelectElement>): void => {
     setAgeRange(e.target.value);
   };
@@ -145,9 +163,9 @@ async function handleGenerate(): Promise<void> {
         inset: 0,
         width: "100vw",
         height: "100vh",
-        background: "#0d0d0d",
-        color: "#EDEDED",
-        fontFamily: "'General Sans', 'Segoe UI', system-ui, sans-serif",
+        background: COLORS.background,
+        color: COLORS.platinum,
+        fontFamily: FONTS.secondary,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -158,7 +176,7 @@ async function handleGenerate(): Promise<void> {
       <header
         style={{
           height: "70px",
-          background: "#161616",
+          background: COLORS.onyx,
           borderBottom: "1px solid rgba(83,44,134,0.3)",
           display: "flex",
           alignItems: "center",
@@ -173,7 +191,7 @@ async function handleGenerate(): Promise<void> {
               width: 40,
               height: 40,
               borderRadius: 10,
-              background: "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)",
+              background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -189,6 +207,7 @@ async function handleGenerate(): Promise<void> {
                 fontSize: 14,
                 fontWeight: 700,
                 letterSpacing: "0.08em",
+                fontFamily: FONTS.primary,
               }}
             >
               AURA AI
@@ -225,7 +244,7 @@ async function handleGenerate(): Promise<void> {
               height: 40,
               borderRadius: "50%",
               border: "none",
-              background: "linear-gradient(135deg, #532C86 0%, #7c3aed 100%)",
+              background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.secondary} 100%)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -250,7 +269,7 @@ async function handleGenerate(): Promise<void> {
         {/* LEFT SIDEBAR - GENERATION FLOW */}
         <aside
           style={{
-            background: "#0d0d0d",
+            background: COLORS.background,
             borderRight: "1px solid rgba(83,44,134,0.2)",
             padding: "32px 24px",
             overflowY: "auto",
@@ -264,6 +283,7 @@ async function handleGenerate(): Promise<void> {
               letterSpacing: "0.06em",
               marginBottom: 24,
               textTransform: "uppercase",
+              fontFamily: FONTS.primary,
             }}
           >
             Generation Flow
@@ -293,8 +313,7 @@ async function handleGenerate(): Promise<void> {
         {/* CENTER - MAIN CONTENT */}
         <main
           style={{
-            background:
-              "linear-gradient(155deg, #2B144C 0%, #31145f 50%, #241044 100%)",
+            background: `linear-gradient(155deg, ${COLORS.deepTwilight} 0%, #31145f 50%, #241044 100%)`,
             padding: "40px 48px",
             overflowY: "auto",
             position: "relative",
@@ -309,8 +328,7 @@ async function handleGenerate(): Promise<void> {
               width: "600px",
               height: "600px",
               borderRadius: "50%",
-              background:
-                "radial-gradient(circle, rgba(198,166,247,0.08) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(198,166,247,0.08) 0%, transparent 70%)",
               pointerEvents: "none",
             }}
           />
@@ -331,8 +349,7 @@ async function handleGenerate(): Promise<void> {
                     width: 56,
                     height: 56,
                     borderRadius: 14,
-                    background:
-                      "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)",
+                    background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -351,8 +368,7 @@ async function handleGenerate(): Promise<void> {
                       fontWeight: 700,
                       lineHeight: "40px",
                       letterSpacing: "-0.01em",
-                      fontFamily:
-                        "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+                      fontFamily: FONTS.primary,
                     }}
                   >
                     Generate AI Model
@@ -383,17 +399,16 @@ async function handleGenerate(): Promise<void> {
                   padding: "8px 12px",
                   borderRadius: 8,
                   transition: "all 0.3s ease",
+                  fontFamily: FONTS.primary,
                   marginTop: 4,
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>): void => {
-                  e.currentTarget.style.background =
-                    "rgba(198,166,247,0.1)";
-                  e.currentTarget.style.color = "#C6A6F7";
+                  e.currentTarget.style.background = "rgba(198,166,247,0.1)";
+                  e.currentTarget.style.color = COLORS.secondary;
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>): void => {
                   e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color =
-                    "rgba(198,166,247,0.7)";
+                  e.currentTarget.style.color = "rgba(198,166,247,0.7)";
                 }}
               >
                 ← Change Method
@@ -435,27 +450,22 @@ async function handleGenerate(): Promise<void> {
                       borderRadius: 12,
                       border: "1px solid rgba(237,237,237,0.12)",
                       background: "rgba(43,20,76,0.35)",
-                      color: "#EDEDED",
+                      color: COLORS.platinum,
                       padding: "16px",
                       boxSizing: "border-box",
                       outline: "none",
                       fontSize: 14,
                       lineHeight: "24px",
-                      fontFamily:
-                        "'General Sans', 'Segoe UI', system-ui, sans-serif",
+                      fontFamily: FONTS.secondary,
                       transition: "all 0.3s ease",
                     }}
                     onFocus={(e: React.FocusEvent<HTMLTextAreaElement>): void => {
-                      e.currentTarget.style.borderColor =
-                        "rgba(198,166,247,0.4)";
-                      e.currentTarget.style.background =
-                        "rgba(43,20,76,0.5)";
+                      e.currentTarget.style.borderColor = "rgba(198,166,247,0.4)";
+                      e.currentTarget.style.background = "rgba(43,20,76,0.5)";
                     }}
                     onBlur={(e: React.FocusEvent<HTMLTextAreaElement>): void => {
-                      e.currentTarget.style.borderColor =
-                        "rgba(237,237,237,0.12)";
-                      e.currentTarget.style.background =
-                        "rgba(43,20,76,0.35)";
+                      e.currentTarget.style.borderColor = "rgba(237,237,237,0.12)";
+                      e.currentTarget.style.background = "rgba(43,20,76,0.35)";
                     }}
                   />
 
@@ -534,33 +544,28 @@ async function handleGenerate(): Promise<void> {
                           borderRadius: 10,
                           border: "1px solid rgba(237,237,237,0.14)",
                           background: "rgba(43,20,76,0.35)",
-                          color: "#EDEDED",
+                          color: COLORS.platinum,
                           padding: "0 14px",
                           boxSizing: "border-box",
                           fontSize: 14,
                           fontWeight: 500,
                           outline: "none",
-                          fontFamily:
-                            "'General Sans', 'Segoe UI', system-ui, sans-serif",
+                          fontFamily: FONTS.secondary,
                           cursor: "pointer",
                           transition: "all 0.3s ease",
                           appearance: "none",
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23C6A6F7' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")`,
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='${COLORS.secondary}' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")`,
                           backgroundRepeat: "no-repeat",
                           backgroundPosition: "right 12px center",
                           paddingRight: "36px",
                         }}
                         onFocus={(e: React.FocusEvent<HTMLSelectElement>): void => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(198,166,247,0.4)";
-                          e.currentTarget.style.background =
-                            "rgba(43,20,76,0.5)";
+                          e.currentTarget.style.borderColor = "rgba(198,166,247,0.4)";
+                          e.currentTarget.style.background = "rgba(43,20,76,0.5)";
                         }}
                         onBlur={(e: React.FocusEvent<HTMLSelectElement>): void => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(237,237,237,0.14)";
-                          e.currentTarget.style.background =
-                            "rgba(43,20,76,0.35)";
+                          e.currentTarget.style.borderColor = "rgba(237,237,237,0.14)";
+                          e.currentTarget.style.background = "rgba(43,20,76,0.35)";
                         }}
                       >
                         {ageRangeOptions.map((range) => (
@@ -569,7 +574,7 @@ async function handleGenerate(): Promise<void> {
                             value={range}
                             style={{
                               background: "#2B144C",
-                              color: "#EDEDED",
+                              color: COLORS.platinum,
                             }}
                           >
                             {range}
@@ -609,104 +614,104 @@ async function handleGenerate(): Promise<void> {
                   </div>
                 </Panel>
               </div>
-{/* RIGHT COLUMN - PREVIEW */}
-<div
-  style={{
-    border: "1px solid rgba(237,237,237,0.12)",
-    borderRadius: 16,
-    minHeight: 560,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "rgba(43,20,76,0.25)",
-    textAlign: "center",
-    color: "rgba(237,237,237,0.6)",
-    padding: "32px 24px",
-    gap: 16,
-    overflow: "hidden",
-    position: "relative",
-  }}
->
-  {generatedImage ? (
-    <img
-      src={generatedImage}
-      alt="Generated AI Model"
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "contain",
-        borderRadius: 12,
-      }}
-    />
-  ) : (
-    <>
-      <div
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: "50%",
-          background: "rgba(198,166,247,0.1)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 32,
-        }}
-      >
-        {isGenerating ? "⚡" : "🖼️"}
-      </div>
+              {/* RIGHT COLUMN - PREVIEW */}
+              <div
+                style={{
+                  border: "1px solid rgba(237,237,237,0.12)",
+                  borderRadius: 16,
+                  minHeight: 560,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(43,20,76,0.25)",
+                  textAlign: "center",
+                  color: "rgba(237,237,237,0.6)",
+                  padding: "32px 24px",
+                  gap: 16,
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                {generatedImage ? (
+                  <img
+                    src={generatedImage}
+                    alt="Generated AI Model"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      borderRadius: 12,
+                    }}
+                  />
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: "50%",
+                        background: "rgba(198,166,247,0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 32,
+                      }}
+                    >
+                      {isGenerating ? "⚡" : "🖼️"}
+                    </div>
 
-      <div>
-        <div
-          style={{
-            color: "#EDEDED",
-            fontSize: 16,
-            fontWeight: 600,
-          }}
-        >
-          {isGenerating ? "Generating Model..." : "Ready to Generate"}
-        </div>
+                    <div>
+                      <div
+                        style={{
+                          color: COLORS.platinum,
+                          fontSize: 16,
+                          fontWeight: 600,
+                          fontFamily: FONTS.primary,
+                        }}
+                      >
+                        {isGenerating ? "Generating Model..." : "Ready to Generate"}
+                      </div>
 
-        <div
-          style={{
-            fontSize: 13,
-            marginTop: 8,
-            lineHeight: "20px",
-          }}
-        >
-          {isGenerating ? (
-            <>
-              Nano Banana Pro is creating
-              <br />
-              your AI fashion model...
-            </>
-          ) : (
-            <>
-              Fill in the details and hit generate
-              <br />
-              to see your AI model.
-            </>
-          )}
-        </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          marginTop: 8,
+                          lineHeight: "20px",
+                        }}
+                      >
+                        {isGenerating ? (
+                          <>
+                            Nano Banana Pro is creating
+                            <br />
+                            your AI fashion model...
+                          </>
+                        ) : (
+                          <>
+                            Fill in the details and hit generate
+                            <br />
+                            to see your AI model.
+                          </>
+                        )}
+                      </div>
 
-        {error && (
-          <div
-            style={{
-              marginTop: 14,
-              color: "#ff7b7b",
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
-            {error}
-          </div>
-        )}
-      </div>
-    </>
-  )}
-</div>
+                      {error && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            color: COLORS.error,
+                            fontSize: 12,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {error}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-
 
             {/* ACTION BUTTONS */}
             <div
@@ -724,65 +729,56 @@ async function handleGenerate(): Promise<void> {
                   borderRadius: 10,
                   border: "1px solid rgba(237,237,237,0.15)",
                   background: "rgba(43,20,76,0.3)",
-                  color: "#EDEDED",
+                  color: COLORS.platinum,
                   cursor: "pointer",
                   fontSize: 14,
                   fontWeight: 600,
-                  fontFamily:
-                    "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+                  fontFamily: FONTS.primary,
                   transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background =
-                    "rgba(43,20,76,0.5)";
-                  e.currentTarget.style.borderColor =
-                    "rgba(237,237,237,0.25)";
+                  e.currentTarget.style.background = "rgba(43,20,76,0.5)";
+                  e.currentTarget.style.borderColor = "rgba(237,237,237,0.25)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background =
-                    "rgba(43,20,76,0.3)";
-                  e.currentTarget.style.borderColor =
-                    "rgba(237,237,237,0.15)";
+                  e.currentTarget.style.background = "rgba(43,20,76,0.3)";
+                  e.currentTarget.style.borderColor = "rgba(237,237,237,0.15)";
                 }}
               >
                 ↻ Regenerate
               </button>
 
-         <button
-  onClick={handleGenerate}
-  disabled={isGenerating}
-  style={{
-    height: 52,
-    padding: "0 48px",
-    borderRadius: 10,
-    border: "none",
-    background:
-      "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)",
-    color: "#fff",
-    fontWeight: 700,
-    cursor: isGenerating ? "not-allowed" : "pointer",
-    fontSize: 14,
-    fontFamily:
-      "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
-    boxShadow: "0 8px 32px rgba(198,166,247,0.25)",
-    transition: "all 0.3s ease",
-    opacity: isGenerating ? 0.65 : 1,
-  }}
-  onMouseEnter={(e) => {
-    if (isGenerating) return;
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                style={{
+                  height: 52,
+                  padding: "0 48px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
+                  color: "#fff",
+                  fontWeight: 700,
+                  cursor: isGenerating ? "not-allowed" : "pointer",
+                  fontSize: 14,
+                  fontFamily: FONTS.primary,
+                  boxShadow: "0 8px 32px rgba(198,166,247,0.25)",
+                  transition: "all 0.3s ease",
+                  opacity: isGenerating ? 0.65 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (isGenerating) return;
 
-    e.currentTarget.style.boxShadow =
-      "0 12px 48px rgba(198,166,247,0.35)";
-    e.currentTarget.style.transform = "translateY(-2px)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.boxShadow =
-      "0 8px 32px rgba(198,166,247,0.25)";
-    e.currentTarget.style.transform = "translateY(0)";
-  }}
->
-  {isGenerating ? "Generating..." : "⏻ Generate Model"}
-</button> 
+                  e.currentTarget.style.boxShadow = "0 12px 48px rgba(198,166,247,0.35)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "0 8px 32px rgba(198,166,247,0.25)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                {isGenerating ? "Generating..." : "⏻ Generate Model"}
+              </button>
             </div>
           </div>
         </main>
@@ -790,7 +786,7 @@ async function handleGenerate(): Promise<void> {
         {/* RIGHT SIDEBAR - CONFIGURATION & HISTORY */}
         <aside
           style={{
-            background: "#0d0d0d",
+            background: COLORS.background,
             borderLeft: "1px solid rgba(83,44,134,0.2)",
             padding: "32px 24px",
             display: "flex",
@@ -802,10 +798,11 @@ async function handleGenerate(): Promise<void> {
             style={{
               fontSize: 12,
               fontWeight: 700,
-              color: "#EDEDED",
+              color: COLORS.platinum,
               letterSpacing: "0.06em",
               marginBottom: 20,
               textTransform: "uppercase",
+              fontFamily: FONTS.primary,
             }}
           >
             ▰ Configuration
@@ -834,6 +831,7 @@ async function handleGenerate(): Promise<void> {
               letterSpacing: "0.06em",
               marginBottom: 14,
               textTransform: "uppercase",
+              fontFamily: FONTS.primary,
             }}
           >
             History
@@ -866,25 +864,20 @@ async function handleGenerate(): Promise<void> {
               borderRadius: 10,
               border: "1px solid rgba(237,237,237,0.15)",
               background: "rgba(237,237,237,0.06)",
-              color: "#EDEDED",
+              color: COLORS.platinum,
               cursor: "pointer",
               fontSize: 13,
               fontWeight: 600,
-              fontFamily:
-                "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+              fontFamily: FONTS.primary,
               transition: "all 0.3s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background =
-                "rgba(198,166,247,0.15)";
-              e.currentTarget.style.borderColor =
-                "rgba(198,166,247,0.3)";
+              e.currentTarget.style.background = "rgba(198,166,247,0.15)";
+              e.currentTarget.style.borderColor = "rgba(198,166,247,0.3)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background =
-                "rgba(237,237,237,0.06)";
-              e.currentTarget.style.borderColor =
-                "rgba(237,237,237,0.15)";
+              e.currentTarget.style.background = "rgba(237,237,237,0.06)";
+              e.currentTarget.style.borderColor = "rgba(237,237,237,0.15)";
             }}
           >
             Confirm Selection →
@@ -923,7 +916,7 @@ function Step(props: StepProps): JSX.Element {
           height: 36,
           borderRadius: 10,
           background: props.active
-            ? "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)"
+            ? `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`
             : "rgba(255,255,255,0.08)",
           display: "flex",
           alignItems: "center",
@@ -939,7 +932,8 @@ function Step(props: StepProps): JSX.Element {
           style={{
             fontSize: 13,
             fontWeight: 700,
-            color: "#EDEDED",
+            color: COLORS.platinum,
+            fontFamily: FONTS.primary,
           }}
         >
           {props.title}
@@ -988,11 +982,10 @@ function HeaderSmall(props: HeaderSmallProps): JSX.Element {
         style={{
           fontSize: 12,
           fontWeight: 700,
-          color: "#C6A6F7",
+          color: COLORS.secondary,
           letterSpacing: "0.06em",
           textTransform: "uppercase",
-          fontFamily:
-            "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+          fontFamily: FONTS.primary,
         }}
       >
         {props.icon} {props.title}
@@ -1004,9 +997,10 @@ function HeaderSmall(props: HeaderSmallProps): JSX.Element {
             color: "rgba(198,166,247,0.4)",
             cursor: "pointer",
             transition: "color 0.3s ease",
+            fontFamily: FONTS.secondary,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = "rgba(198,166,247,0.7)";
+            e.currentTarget.style.color = COLORS.secondary;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = "rgba(198,166,247,0.4)";
@@ -1041,11 +1035,12 @@ function ChipButton(props: ChipButtonProps): JSX.Element {
         background: isHovered
           ? "rgba(198,166,247,0.25)"
           : "rgba(198,166,247,0.12)",
-        color: "#EDEDED",
+        color: COLORS.platinum,
         fontSize: 12,
         fontWeight: 500,
         cursor: "pointer",
         transition: "all 0.3s ease",
+        fontFamily: FONTS.secondary,
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -1066,6 +1061,7 @@ function Field(props: FieldProps): JSX.Element {
           marginBottom: 10,
           letterSpacing: "0.01em",
           textTransform: "uppercase",
+          fontFamily: FONTS.primary,
         }}
       >
         {props.label}
@@ -1100,14 +1096,13 @@ function Input(props: InputProps): JSX.Element {
         borderRadius: 10,
         border: "1px solid rgba(237,237,237,0.14)",
         background: "rgba(43,20,76,0.35)",
-        color: "#EDEDED",
+        color: COLORS.platinum,
         padding: "0 14px",
         boxSizing: "border-box",
         fontSize: 14,
         fontWeight: 500,
         outline: "none",
-        fontFamily:
-          "'General Sans', 'Segoe UI', system-ui, sans-serif",
+        fontFamily: FONTS.secondary,
         transition: "all 0.3s ease",
       } as CSSProperties}
       onFocus={handleFocus}
@@ -1130,28 +1125,23 @@ function GenderButton(props: GenderButtonProps): JSX.Element {
         background: props.active
           ? "rgba(198,166,247,0.2)"
           : "rgba(43,20,76,0.3)",
-        color: "#EDEDED",
+        color: COLORS.platinum,
         cursor: "pointer",
         fontSize: 14,
         fontWeight: 600,
-        fontFamily:
-          "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+        fontFamily: FONTS.primary,
         transition: "all 0.3s ease",
       }}
       onMouseEnter={(e) => {
         if (!props.active) {
-          e.currentTarget.style.borderColor =
-            "rgba(198,166,247,0.3)";
-          e.currentTarget.style.background =
-            "rgba(43,20,76,0.45)";
+          e.currentTarget.style.borderColor = "rgba(198,166,247,0.3)";
+          e.currentTarget.style.background = "rgba(43,20,76,0.45)";
         }
       }}
       onMouseLeave={(e) => {
         if (!props.active) {
-          e.currentTarget.style.borderColor =
-            "rgba(237,237,237,0.14)";
-          e.currentTarget.style.background =
-            "rgba(43,20,76,0.3)";
+          e.currentTarget.style.borderColor = "rgba(237,237,237,0.14)";
+          e.currentTarget.style.background = "rgba(43,20,76,0.3)";
         }
       }}
     >
@@ -1175,15 +1165,17 @@ function Config(props: ConfigProps): JSX.Element {
           fontSize: 11,
           fontWeight: 600,
           letterSpacing: "0.02em",
+          fontFamily: FONTS.secondary,
         }}
       >
         {props.label}
       </span>
       <span
         style={{
-          color: props.green ? "#4ade80" : "#C6A6F7",
+          color: props.green ? "#4ade80" : COLORS.secondary,
           fontSize: 11,
           fontWeight: 700,
+          fontFamily: FONTS.primary,
         }}
       >
         {props.value}
@@ -1221,13 +1213,12 @@ function History(props: HistoryProps): JSX.Element {
           width: 44,
           height: 44,
           borderRadius: 8,
-          background:
-            "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)",
+          background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
           flexShrink: 0,
         }}
       />
       <div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "#EDEDED" }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.platinum, fontFamily: FONTS.primary }}>
           {props.title}
         </div>
         <div
