@@ -5,7 +5,7 @@ import { connectDB } from "./config/db";
 import modelRoutes from "./routes/model.routes";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
-
+import tryOnRoutes from "./routes/tryon.routes";
 dotenv.config();
 
 const app = express();
@@ -23,7 +23,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api/models", modelRoutes);
-
+app.use("/api/tryon", tryOnRoutes);
 const PORT = Number(process.env.PORT || 5000);
 
 (async () => {
