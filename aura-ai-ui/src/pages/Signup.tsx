@@ -33,8 +33,8 @@ export default function Signup(): JSX.Element {
 
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
-
-    nav("/app/generation");
+    alert("Account created successfully. Please log in.");
+    nav("/Login");
   }
 
   return (

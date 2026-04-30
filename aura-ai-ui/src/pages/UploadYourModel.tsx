@@ -2,18 +2,66 @@ import type { JSX } from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = "https://auraai-backend-6a8n.onrender.com";
+
 export default function UploadYourModel(): JSX.Element {
   const nav = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string>("");
+
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [resultImage, setResultImage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const selectedFiles = Array.from(event.target.files || []);
 
-    setFileName(file.name);
-    setPreview(URL.createObjectURL(file));
+    setFiles(selectedFiles);
+    setPreviews(selectedFiles.map((file) => URL.createObjectURL(file)));
+    setResultImage(null);
+    setError("");
+  }
+
+  async function handleGenerate(): Promise<void> {
+    try {
+      if (files.length < 2) {
+        setError("Upload at least 2 images: person image and clothing image.");
+        return;
+      }
+
+      setIsGenerating(true);
+      setError("");
+
+      const formData = new FormData();
+      files.forEach((file) => formData.append("images", file));
+
+      const res = await fetch(`${API_URL}/api/tryon/generate`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Try-on generation failed.");
+      }
+
+      setResultImage(`data:${data.mimeType};base64,${data.imageBase64}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Try-on generation failed.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  function downloadResult(): void {
+    if (!resultImage) return;
+
+    const link = document.createElement("a");
+    link.href = resultImage;
+    link.download = "aura-try-on-result.png";
+    link.click();
   }
 
   return (
@@ -32,7 +80,6 @@ export default function UploadYourModel(): JSX.Element {
         zIndex: 9999,
       }}
     >
-      {/* HEADER */}
       <header
         style={{
           height: "65px",
@@ -42,7 +89,6 @@ export default function UploadYourModel(): JSX.Element {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 24px",
-          boxSizing: "border-box",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
@@ -59,6 +105,7 @@ export default function UploadYourModel(): JSX.Element {
           >
             ✎
           </div>
+
           <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.04em" }}>
             AURA AI
           </span>
@@ -79,302 +126,263 @@ export default function UploadYourModel(): JSX.Element {
         </button>
       </header>
 
-      {/* BODY */}
-      <div
+      <main
         style={{
           flex: 1,
-          display: "grid",
-          gridTemplateColumns: "320px 1fr",
-          overflow: "hidden",
-          padding: "0 40px",
-          background: "#0d0d0d",
+          background: "linear-gradient(155deg, #2B144C 0%, #1c0a40 52%, #532C86 100%)",
+          padding: "32px",
+          overflowY: "auto",
         }}
       >
-        {/* SIDEBAR */}
-        <aside
+        <div
           style={{
-            width: "320px",
-            background: "#161616",
-            borderRight: "1px solid rgba(83,44,134,0.2)",
-            padding: "24px",
-            boxSizing: "border-box",
+            maxWidth: "1200px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "28px",
           }}
         >
-          <h3 style={{ margin: 0, fontSize: "14px", lineHeight: "28px" }}>
-            Generation Flow
-          </h3>
-
-          <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-            <Step id={1} title="Choose Model" subtitle="Completed" active={false} />
-            <Step id={2} title="Upload Your Model" subtitle="Current step" active />
-            <Step id={3} title="Upload Garment" subtitle="Next step" active={false} faded />
-            <Step id={4} title="Generate & Customize" subtitle="Coming up" active={false} faded />
-          </div>
-
-          <div
+          <section
             style={{
-              marginTop: "24px",
-              borderRadius: "8px",
-              border: "1px solid rgba(83,44,134,0.2)",
-              background: "rgba(83,44,134,0.1)",
-              padding: "16px",
+              border: "1px solid rgba(237,237,237,0.16)",
+              background: "#161616",
+              borderRadius: "16px",
+              padding: "28px",
             }}
           >
-            <h4 style={{ margin: 0, fontSize: "14px" }}>Upload Instructions</h4>
+            <h1 style={{ margin: 0, fontSize: "26px" }}>AI Virtual Try-On</h1>
+
             <p
               style={{
-                margin: "8px 0 0",
+                marginTop: "8px",
+                color: "rgba(237,237,237,0.6)",
                 fontFamily: "'General Sans', system-ui, sans-serif",
-                fontSize: "12px",
-                lineHeight: "1.7",
-                color: "rgba(237,237,237,0.55)",
+                fontSize: "14px",
+                lineHeight: "22px",
               }}
             >
-              Upload a clear full-body image. Use JPG or PNG. Make sure the model is centered,
-              visible, and standing in good lighting.
+              Upload multiple images: one person/model image and one or more clothing reference images.
+              AURA AI will generate a realistic try-on result.
             </p>
-          </div>
-        </aside>
 
-        {/* MAIN */}
-        <main
-          style={{
-            background: "linear-gradient(155deg, #2B144C 0%, #1c0a40 52%, #532C86 100%)",
-            padding: "32px",
-            overflowY: "auto",
-            boxSizing: "border-box",
-          }}
-        >
-          <div style={{ maxWidth: "896px", display: "flex", flexDirection: "column", gap: "32px" }}>
-            {/* TITLE */}
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "rgba(198,166,247,0.12)",
-                  border: "1px solid rgba(198,166,247,0.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "18px",
-                }}
-              >
-                ⬆
-              </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
 
-              <div>
-                <h1 style={{ margin: 0, fontSize: "22px", lineHeight: "28px" }}>
-                  Upload Your Model
-                </h1>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontFamily: "'General Sans', system-ui, sans-serif",
-                    fontSize: "13px",
-                    color: "rgba(237,237,237,0.6)",
-                  }}
-                >
-                  Upload a full-body model image to continue your virtual try-on flow.
-                </p>
-              </div>
-            </div>
-
-            {/* UPLOAD CARD */}
             <div
+              onClick={() => fileInputRef.current?.click()}
               style={{
-                border: "1px solid rgba(237,237,237,0.16)",
-                background: "#161616",
-                borderRadius: "16px",
-                padding: "32px",
-                minHeight: "420px",
+                marginTop: "24px",
+                minHeight: "320px",
+                borderRadius: "14px",
+                border: "1.5px dashed rgba(198,166,247,0.45)",
+                background:
+                  "linear-gradient(135deg, rgba(83,44,134,0.16), rgba(198,166,247,0.08))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                padding: "20px",
                 boxSizing: "border-box",
               }}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-              />
-
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  height: "300px",
-                  borderRadius: "14px",
-                  border: "1.5px dashed rgba(198,166,247,0.45)",
-                  background:
-                    "linear-gradient(135deg, rgba(83,44,134,0.16), rgba(198,166,247,0.08))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  overflow: "hidden",
-                }}
-              >
-                {preview ? (
-                  <img
-                    src={preview}
-                    alt="Uploaded model preview"
+              {previews.length === 0 ? (
+                <div style={{ textAlign: "center" }}>
+                  <div
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      background: "#0d0d0d",
+                      width: "76px",
+                      height: "76px",
+                      borderRadius: "22px",
+                      margin: "0 auto",
+                      background: "linear-gradient(135deg, #532C86, #2B144C)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "34px",
                     }}
-                  />
-                ) : (
-                  <div style={{ textAlign: "center", maxWidth: "360px" }}>
-                    <div
-                      style={{
-                        width: "64px",
-                        height: "64px",
-                        borderRadius: "18px",
-                        margin: "0 auto",
-                        background: "linear-gradient(135deg, #532C86, #2B144C)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "28px",
-                      }}
-                    >
-                      ⬆
-                    </div>
-
-                    <h2 style={{ margin: "18px 0 0", fontSize: "20px" }}>
-                      Click to upload model image
-                    </h2>
-
-                    <p
-                      style={{
-                        margin: "8px 0 0",
-                        fontFamily: "'General Sans', system-ui, sans-serif",
-                        fontSize: "13px",
-                        lineHeight: "22px",
-                        color: "rgba(237,237,237,0.55)",
-                      }}
-                    >
-                      Upload a JPG or PNG image. Full-body photos give the best result.
-                    </p>
+                  >
+                    🖼️
                   </div>
-                )}
-              </div>
 
-              {fileName && (
+                  <h2 style={{ margin: "18px 0 0", fontSize: "20px" }}>
+                    Click to upload or drag images
+                  </h2>
+
+                  <p style={{ color: "rgba(237,237,237,0.55)", fontSize: "13px" }}>
+                    JPEG, PNG, WEBP · Upload person + clothes images
+                  </p>
+                </div>
+              ) : (
                 <div
                   style={{
-                    marginTop: "16px",
-                    padding: "12px 14px",
-                    borderRadius: "10px",
-                    background: "rgba(83,44,134,0.18)",
-                    color: "#C6A6F7",
-                    fontSize: "13px",
+                    width: "100%",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "12px",
                   }}
                 >
-                  Selected file: {fileName}
+                  {previews.map((src, index) => (
+                    <div
+                      key={src}
+                      style={{
+                        height: "150px",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                        background: "#0d0d0d",
+                        position: "relative",
+                        border: "1px solid rgba(198,166,247,0.2)",
+                      }}
+                    >
+                      <img
+                        src={src}
+                        alt={`Upload ${index + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        }}
+                      />
+
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: 8,
+                          left: 8,
+                          borderRadius: "999px",
+                          padding: "4px 9px",
+                          fontSize: "11px",
+                          color: "#C6A6F7",
+                          background: "rgba(43,20,76,0.85)",
+                        }}
+                      >
+                        Image {index + 1}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              <div
-                style={{
-                  marginTop: "28px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "16px",
-                }}
-              >
-                <button
-                  onClick={() => nav("/app/generation")}
-                  style={{
-                    height: "48px",
-                    padding: "12px 28px",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(237,237,237,0.18)",
-                    background: "transparent",
-                    color: "#EDEDED",
-                    cursor: "pointer",
-                    fontSize: "16px",
-                    fontWeight: 600,
-                  }}
-                >
-                  ← Back
-                </button>
-
-                <button
-                  disabled={!preview}
-                  onClick={() => nav("/app/upload-garment")}
-                  style={{
-                    height: "48px",
-                    padding: "12px 32px",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "linear-gradient(135deg, #C6A6F7, #532C86)",
-                    color: "#fff",
-                    cursor: preview ? "pointer" : "not-allowed",
-                    opacity: preview ? 1 : 0.5,
-                    fontSize: "18px",
-                    fontWeight: 600,
-                  }}
-                >
-                  Continue to Upload Garment →
-                </button>
-              </div>
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
 
-function Step(props: {
-  id: number;
-  title: string;
-  subtitle: string;
-  active: boolean;
-  faded?: boolean;
-}): JSX.Element {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-        borderRadius: "10px",
-        padding: "12px 14px",
-        border: props.active
-          ? "1px solid rgba(83,44,134,0.5)"
-          : "1px solid rgba(255,255,255,0.07)",
-        background: props.active ? "rgba(55,25,90,0.65)" : "rgba(255,255,255,0.02)",
-        opacity: props.faded ? 0.35 : 1,
-      }}
-    >
-      <div
-        style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "50%",
-          background: props.active ? "#C6A6F7" : "rgba(255,255,255,0.1)",
-          color: props.active ? "#1a0033" : "rgba(255,255,255,0.55)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "12px",
-          fontWeight: 700,
-        }}
-      >
-        {props.id}
-      </div>
+            <div
+              style={{
+                marginTop: "18px",
+                padding: "14px",
+                borderRadius: "10px",
+                background: "rgba(83,44,134,0.18)",
+                color: "#C6A6F7",
+                fontSize: "13px",
+              }}
+            >
+              Fixed prompt: Make the person try on the uploaded clothes realistically.
+            </div>
 
-      <div>
-        <div style={{ fontSize: "13px", fontWeight: 600 }}>{props.title}</div>
-        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>
-          {props.subtitle}
+            {error && (
+              <div style={{ marginTop: "14px", color: "#ff7b7b", fontSize: "13px" }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              style={{
+                marginTop: "22px",
+                width: "100%",
+                height: "52px",
+                borderRadius: "10px",
+                border: "none",
+                background: "linear-gradient(135deg, #C6A6F7, #532C86)",
+                color: "#fff",
+                cursor: isGenerating ? "not-allowed" : "pointer",
+                opacity: isGenerating ? 0.65 : 1,
+                fontSize: "16px",
+                fontWeight: 700,
+              }}
+            >
+              {isGenerating ? "Generating Try-On..." : "Generate Try-On"}
+            </button>
+          </section>
+
+          <section
+            style={{
+              border: "1px solid rgba(237,237,237,0.16)",
+              background: "#161616",
+              borderRadius: "16px",
+              padding: "28px",
+              minHeight: "620px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <h2 style={{ margin: 0, fontSize: "24px" }}>Generated Result</h2>
+
+            <p
+              style={{
+                marginTop: "8px",
+                color: "rgba(237,237,237,0.6)",
+                fontSize: "13px",
+              }}
+            >
+              Your AI try-on image will appear here after generation.
+            </p>
+
+            <div
+              style={{
+                flex: 1,
+                marginTop: "20px",
+                borderRadius: "14px",
+                background: "rgba(43,20,76,0.25)",
+                border: "1px solid rgba(237,237,237,0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                textAlign: "center",
+              }}
+            >
+              {resultImage ? (
+                <img
+                  src={resultImage}
+                  alt="Generated try-on"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              ) : (
+                <div style={{ color: "rgba(237,237,237,0.55)" }}>
+                  {isGenerating ? "Creating your try-on image..." : "No result yet"}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={downloadResult}
+              disabled={!resultImage}
+              style={{
+                marginTop: "20px",
+                height: "48px",
+                borderRadius: "8px",
+                border: "1px solid rgba(198,166,247,0.35)",
+                background: resultImage ? "rgba(83,44,134,0.35)" : "rgba(237,237,237,0.06)",
+                color: "#EDEDED",
+                cursor: resultImage ? "pointer" : "not-allowed",
+                opacity: resultImage ? 1 : 0.45,
+                fontWeight: 700,
+              }}
+            >
+              Download Generated Image
+            </button>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
