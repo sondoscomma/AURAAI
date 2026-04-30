@@ -1,11 +1,29 @@
-// Hero.tsx
 import type { JSX } from "react";
+import { useNavigate } from "react-router-dom";
 import heroImg from "../assets/image/hero.png";
 import sparkleIcon from "../assets/icone/spark.png";
 import addIcone from "../assets/icone/add.png";
+
 export default function Hero(): JSX.Element {
+  const navigate = useNavigate();
+
+  const handleTryVirtualTryOn = () => {
+    // Navigate to sign-in first
+    navigate("/app/signin");
+  };
+
+  const handleCreateAIModel = () => {
+    // Navigate to sign-in first
+    navigate("/app/signin");
+  };
+
   return (
-    <section className="w-full px-[104px] pb-16 pt-10 bg-gradient-to-b from-black/50 to-black">
+    <section 
+      className="w-full px-[104px] pb-16 pt-10"
+      style={{
+        background: "linear-gradient(135deg, rgba(43, 20, 76, 0.3) 0%, #161616 50%, rgba(83, 44, 134, 0.2) 100%)"
+      }}
+    >
       <div className="mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-2">
         {/* LEFT */}
         <div>
@@ -25,14 +43,18 @@ export default function Hero(): JSX.Element {
 
           <div className="mt-10 flex flex-wrap items-center gap-5">
             <button
+              onClick={handleTryVirtualTryOn}
               className="
                 inline-flex items-center gap-2
-                rounded-xl bg-violet-700/60 px-6 py-3
+                rounded-xl px-6 py-3
                 text-sm font-semibold text-white
-                shadow-lg shadow-violet-900/30
-                hover:bg-violet-700
                 transition
+                hover:opacity-90
               "
+              style={{
+                background: "#532C86",
+                boxShadow: "0 8px 32px rgba(83, 44, 134, 0.25)"
+              }}
               type="button"
             >
               <span className="text-lg"> <img src={sparkleIcon} alt="" /></span>
@@ -40,6 +62,7 @@ export default function Hero(): JSX.Element {
             </button>
 
             <button
+              onClick={handleCreateAIModel}
               className="
                 inline-flex items-center gap-2
                 rounded-xl border border-violet-500/40
