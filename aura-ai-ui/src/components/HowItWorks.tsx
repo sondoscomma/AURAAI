@@ -1,4 +1,3 @@
-// HowItWorks.tsx
 import type { JSX } from "react";
 
 // Define the type for a step object for better type safety
@@ -32,14 +31,24 @@ export default function HowItWorks(): JSX.Element {
   ];
 
   return (
-    // Section container with dark background and padding
-    <section className="w-full bg-black py-20 px-[104px]">
+    // Section container with gradient background and padding
+    <section 
+      className="w-full py-20 px-[104px]"
+      style={{
+        background: "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)"
+      }}
+    >
       {/* Constrained width container */}
       <div className="mx-auto max-w-[1440px]">
         {/* Section Title with your specified styling */}
-        <h2 className="font-bricolage text-center text-[36px] leading-[40px] font-bold text-white mb-16">
+        <h2 className="font-bricolage text-center text-[36px] leading-[40px] font-bold text-white mb-4">
           How It Works
         </h2>
+        
+        {/* Subtitle */}
+        <p className="text-center text-white/80 text-lg mb-16 max-w-2xl mx-auto">
+          Three simple steps to revolutionize your shopping experience
+        </p>
 
         {/* Grid for the steps - responsive: 1 column on mobile, 3 on larger screens */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
@@ -53,13 +62,17 @@ export default function HowItWorks(): JSX.Element {
               <div
                 className="
                   flex items-center justify-center
-                  w-16 h-16 rounded-full
-                  bg-gradient-to-br from-violet-600 to-purple-800
+                  w-20 h-20 rounded-full
                   mb-6
-                  shadow-lg shadow-violet-900/40
+                  shadow-lg
+                  transition-transform hover:scale-110
                 "
+                style={{
+                  background: "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)",
+                  boxShadow: "0 8px 32px rgba(83, 44, 134, 0.4)"
+                }}
               >
-                <span className="text-2xl font-bold text-white">
+                <span className="text-3xl font-bold text-white">
                   {step.number}
                 </span>
               </div>
@@ -70,7 +83,7 @@ export default function HowItWorks(): JSX.Element {
               </h3>
 
               {/* Step Description */}
-              <p className="text-sm leading-relaxed text-white/65 max-w-xs">
+              <p className="text-sm leading-relaxed text-white/85 max-w-xs">
                 {step.description}
               </p>
             </div>
