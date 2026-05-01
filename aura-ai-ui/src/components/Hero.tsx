@@ -9,13 +9,13 @@ export default function Hero(): JSX.Element {
 
   const handleTryVirtualTryOn = () => {
     // Navigate to sign-in first
-    navigate("/app/login");
+    navigate("/login");
   };
 
 
   const handleCreateAIModel = () => {
     // Navigate to sign-in first
-    navigate("/app/login");
+    navigate("/login");
   };
 
   return (
