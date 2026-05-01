@@ -31,11 +31,11 @@ export default function HowItWorks(): JSX.Element {
   ];
 
   return (
-    // Section container with gradient background and padding
+    // Section container with specified background color and padding
     <section 
       className="w-full py-20 px-[104px]"
       style={{
-        background: "linear-gradient(135deg, #C6A6F7 0%, #532C86 100%)"
+        background: "#2B144C1A"
       }}
     >
       {/* Constrained width container */}
