@@ -75,11 +75,14 @@ export default function Pricing(): JSX.Element {
               key={index}
               className="
                 relative flex-1 max-w-sm
-                border border-white/10 rounded-2xl
+                rounded-2xl
                 bg-gradient-to-b from-gray-900/50 to-black
                 p-8 lg:p-10
                 transition-all duration-300 hover:border-violet-500/50
               "
+              style={{
+                border: "2px solid #C6A6F7"
+              }}
             >
               {/* "Popular" Badge */}
               {plan.badge && (
