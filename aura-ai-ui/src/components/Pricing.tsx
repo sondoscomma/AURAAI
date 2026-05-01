@@ -1,4 +1,3 @@
-// Pricing.tsx
 import type { JSX } from "react";
 
 // Define the type for a pricing plan for better type safety and maintainability
@@ -123,13 +122,21 @@ export default function Pricing(): JSX.Element {
               {/* Call-to-Action Button */}
               <button
                 className={`
-                  w-full py-3 px-6 rounded-xl font-semibold text-sm transition
+                  w-full py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300
                   ${
                     plan.buttonStyle === "primary"
-                      ? "bg-violet-700/60 text-white shadow-lg shadow-violet-900/30 hover:bg-violet-700"
+                      ? "bg-violet-700/60 text-white shadow-lg shadow-violet-900/30 hover:bg-violet-700 hover:shadow-lg hover:shadow-violet-900/40"
                       : "border border-violet-500/40 bg-transparent text-white hover:bg-white/5"
                   }
                 `}
+                style={
+                  plan.buttonStyle === "primary" && plan.buttonText === "Start Free Trial"
+                    ? {
+                        background: "linear-gradient(90deg, #C6A6F7 0%, #532C86 100%)",
+                        boxShadow: "0 8px 32px rgba(198, 166, 247, 0.25)"
+                      }
+                    : {}
+                }
                 type="button"
               >
                 {plan.buttonText}
