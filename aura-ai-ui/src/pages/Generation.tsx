@@ -34,8 +34,6 @@ const initialSteps: Step[] = [
 
 function StepItem({ step }: { step: Step }): JSX.Element {
   const isCurrent = step.state === "current";
-  const isNext = step.state === "next";
-  const isLater = step.state === "later";
   const isDone = step.state === "done";
 
   return (
