@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Plan = {
   name: string;
@@ -12,6 +13,8 @@ type Plan = {
 };
 
 export default function Pricing(): JSX.Element {
+  const nav = useNavigate();
+
   const plans: Plan[] = [
     {
       name: "Free",
@@ -53,6 +56,10 @@ export default function Pricing(): JSX.Element {
       buttonStyle: "secondary",
     },
   ];
+
+  const handleButtonClick = (planName: string): void => {
+    nav("/login", { state: { plan: planName } });
+  };
 
   return (
     <section
@@ -136,6 +143,7 @@ export default function Pricing(): JSX.Element {
               {/* Button */}
               <button
                 className="w-full py-3 px-6 font-semibold text-sm transition-all duration-300"
+                onClick={() => handleButtonClick(plan.name)}
                 style={
                   plan.buttonStyle === "primary"
                     ? {
