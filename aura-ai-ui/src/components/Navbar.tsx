@@ -36,13 +36,14 @@ export default function Navbar(): JSX.Element {
               className="font-bold text-white text-sm"
               style={{
                 background: "linear-gradient(135deg, #532C86 0%, #2B144C 100%)",
-                border: "1px solid #00BFFF",
+                border: "none",
                 borderRadius: "8px",
                 padding: "8px 24px",
                 height: "40px",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
-                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2), 0 0 10px rgba(0, 191, 255, 0.3)",
+                boxShadow:
+                  "inset 0 2px 4px rgba(0,0,0,0.2), 0 0 10px rgba(0, 191, 255, 0.3)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.boxShadow =
