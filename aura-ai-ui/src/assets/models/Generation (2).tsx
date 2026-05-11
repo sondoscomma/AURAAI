@@ -240,6 +240,12 @@ function ChoiceCard({
   );
 }
 
+const routeBySelection: Record<ModelChoice, string> = {
+  upload: "/app/upload-your-model",
+  generate: "/app/generate-ai-model",
+  aura: "/app/aura-models",
+};
+
 export default function Generation(): JSX.Element {
   const nav = useNavigate();
   const [selected, setSelected] = useState<ModelChoice | null>(null);
@@ -275,12 +281,6 @@ export default function Generation(): JSX.Element {
     []
   );
 
-  const routeBySelection: Record<ModelChoice, string> = {
-    upload: "/app/upload-your-model",
-    generate: "/app/generate-ai-model",
-    aura: "/app/aura-models",
-  };
-
   const handleContinue = (): void => {
     if (!selected) return;
 
@@ -292,7 +292,7 @@ export default function Generation(): JSX.Element {
     ]);
 
     nav(routeBySelection[selected], {
-      state: { selected, garmentUploaded: false },
+      state: { selected },
     });
   };
 
@@ -600,7 +600,7 @@ export default function Generation(): JSX.Element {
                   }
                 }}
               >
-                Continue to Upload Garment
+                Continue
                 <span>→</span>
               </button>
             </div>
