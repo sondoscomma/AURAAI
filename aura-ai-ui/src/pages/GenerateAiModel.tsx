@@ -114,22 +114,30 @@ export default function GenerateAiModel(): JSX.Element {
       setIsGenerating(true);
       setError("");
 
-      const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt,
-          gender,
-          ageRange,
-          ethnicity,
-          bodyType,
-          clothingStyle,
-          pose,
-        }),
-      });
+ const token = localStorage.getItem("token");
 
+if (!token) {
+  setError("Please login first.");
+  nav("/login");
+  return;
+}
+
+const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({
+    prompt,
+    gender,
+    ageRange,
+    ethnicity,
+    bodyType,
+    clothingStyle,
+    pose,
+  }),
+});
       const data = await res.json();
 
       if (!res.ok) {
