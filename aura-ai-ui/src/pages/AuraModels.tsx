@@ -389,7 +389,7 @@ export default function AuraModels(): JSX.Element {
             <div style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
               <button
                 disabled={!selectedModel}
-                onClick={() => nav("/app/upload-garment", { state: { model: selectedModel } })}
+                onClick={() => nav("/app/generate-ai-model", { state: { model: selectedModel } })}
                 style={{
                   height: 48,
                   padding: "0 32px",
