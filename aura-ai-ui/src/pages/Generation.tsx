@@ -45,11 +45,11 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         gap: "12px",
         borderRadius: "8px",
         padding: "16px",
-        border: isCurrent ? "1px solid #6c3cff" : "1px solid #333",
-        background: isCurrent ? "#6c3cff" : "#1e1e1e",
-        boxShadow: isCurrent ? "0 2px 8px rgba(108, 60, 255, 0.3)" : "none",
+        border: isCurrent ? "2px solid #6B46C1" : "1px solid transparent",
+        background: isCurrent ? "#6B46C1" : "#3A256A",
+        boxShadow: isCurrent ? "0 2px 8px rgba(107, 70, 193, 0.3)" : "none",
         opacity: isNext ? 0.55 : isLater ? 0.3 : 1,
-        transition: "all 0.3s ease",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
       <div
@@ -61,8 +61,8 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: isCurrent ? "#fff" : "#333",
-          color: isCurrent ? "#6c3cff" : "#888",
+          background: isCurrent ? "#fff" : "#8B5CF6",
+          color: isCurrent ? "#6B46C1" : "#fff",
           fontSize: "12px",
           fontWeight: 700,
         }}
@@ -75,7 +75,7 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           style={{
             fontSize: "14px",
             fontWeight: 700,
-            color: isCurrent ? "#fff" : "#888",
+            color: isCurrent ? "#fff" : "#8B7AB8",
             lineHeight: "20px",
           }}
         >
@@ -84,7 +84,7 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         <div
           style={{
             fontSize: "12px",
-            color: isCurrent ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.32)",
+            color: isCurrent ? "rgba(255,255,255,0.7)" : "rgba(139,122,184,0.6)",
             marginTop: "2px",
           }}
         >
@@ -121,14 +121,14 @@ function ChoiceCard({
       style={{
         position: "relative",
         textAlign: "left",
-        borderRadius: "12px",
+        borderRadius: "16px",
         padding: 0,
-        border: selected ? "1.5px solid #6c3cff" : "1px solid #333",
-        background: selected ? "#2a2a2a" : "#1e1e1e",
+        border: selected ? "2px solid #8B5CF6" : "1px solid #3A256A",
+        background: "#1A1425",
         boxShadow: selected
-          ? "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(108, 60, 255, 0.15)"
-          : "none",
-        transition: "all 0.3s ease",
+          ? "0 0 20px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3)"
+          : "0 4px 12px rgba(0, 0, 0, 0.3)",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         cursor: "pointer",
         width: "100%",
         height: "100%",
@@ -140,26 +140,26 @@ function ChoiceCard({
       }}
       onMouseEnter={(e) => {
         if (!selected) {
-          e.currentTarget.style.background = "#2a2a2a";
           e.currentTarget.style.transform = "translateY(-2px)";
-          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 12px rgba(139, 92, 246, 0.15)";
         }
       }}
       onMouseLeave={(e) => {
         if (!selected) {
-          e.currentTarget.style.background = "#1e1e1e";
           e.currentTarget.style.transform = "none";
-          e.currentTarget.style.boxShadow = "none";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
         }
       }}
     >
       <div
         style={{
-          width: "100%",
+          margin: "16px",
+          width: "calc(100% - 32px)",
           height: "180px",
+          borderRadius: "12px",
           overflow: "hidden",
           flexShrink: 0,
-          borderBottom: "1px solid #333",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
         }}
       >
         <img
@@ -176,7 +176,7 @@ function ChoiceCard({
 
       <div
         style={{
-          padding: "16px",
+          padding: "0 20px 20px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -184,8 +184,8 @@ function ChoiceCard({
       >
         <div
           style={{
-            fontSize: "18px",
-            fontWeight: 700,
+            fontSize: "20px",
+            fontWeight: 600,
             color: "#fff",
             margin: "0 0 8px 0",
           }}
@@ -198,7 +198,7 @@ function ChoiceCard({
             margin: "0 0 12px 0",
             fontSize: "14px",
             lineHeight: "1.5",
-            color: "#aaa",
+            color: "#B8A9E0",
           }}
         >
           {desc}
@@ -218,7 +218,7 @@ function ChoiceCard({
             style={{
               fontSize: "12px",
               fontWeight: 500,
-              color: selected ? "#C6A6F7" : "#888",
+              color: selected ? "#8B5CF6" : "#8B7AB8",
             }}
           >
             {meta}
@@ -284,7 +284,7 @@ export default function Generation(): JSX.Element {
         height: "100vh",
         background: "#0d0d0d",
         color: "#fff",
-        fontFamily: "'Inter', 'Bricolage Grotesque', system-ui, sans-serif",
+        fontFamily: "'Bricolage Grotesque', 'Inter', system-ui, sans-serif",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -295,10 +295,10 @@ export default function Generation(): JSX.Element {
       <header
         style={{
           width: "100%",
-          height: "64px",
+          height: "80px",
           flexShrink: 0,
-          background: "#1a0b3e",
-          borderBottom: "1px solid #2a1a4e",
+          background: "#1E0F3B",
+          borderBottom: "1px solid #3A256A",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -309,20 +309,20 @@ export default function Generation(): JSX.Element {
         <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
           <div
             style={{
-              width: "36px",
-              height: "36px",
+              width: "40px",
+              height: "40px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #6c3cff, #532C86)",
+              background: "linear-gradient(135deg, #6B46C1, #8B5CF6)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "17px",
+              fontSize: "18px",
               flexShrink: 0,
             }}
           >
             ✎
           </div>
-          <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.04em" }}>
+          <span style={{ fontWeight: 700, fontSize: "18px", letterSpacing: "0.04em" }}>
             AURA AI
           </span>
         </div>
@@ -330,14 +330,14 @@ export default function Generation(): JSX.Element {
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              border: "1px solid #2a1a4e",
+              width: "40px",
+              height: "40px",
+              borderRadius: "8px",
+              border: "1px solid #3A256A",
               background: "transparent",
               color: "rgba(255,255,255,0.7)",
               cursor: "pointer",
-              fontSize: "14px",
+              fontSize: "16px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -348,17 +348,18 @@ export default function Generation(): JSX.Element {
           <button
             onClick={() => nav("/app/profile")}
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
+              height: "40px",
+              padding: "0 16px",
+              borderRadius: "8px",
               border: "none",
-              background: "linear-gradient(135deg, #6c3cff, #532C86)",
+              background: "#6B46C1",
               color: "#fff",
               cursor: "pointer",
               fontSize: "15px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              gap: "6px",
             }}
           >
             👤
@@ -379,8 +380,8 @@ export default function Generation(): JSX.Element {
         <aside
           style={{
             width: "280px",
-            background: "#1a1a1a",
-            borderRight: "1px solid #2a2a2a",
+            background: "#2D1B69",
+            borderRight: "1px solid #3A256A",
             padding: "24px",
             boxSizing: "border-box",
             display: "flex",
@@ -411,9 +412,9 @@ export default function Generation(): JSX.Element {
             style={{
               marginTop: "24px",
               borderRadius: "8px",
-              border: "1px solid #333",
-              background: "#1e1e1e",
-              padding: "16px",
+              border: "1px solid #3A256A",
+              background: "#3A256A",
+              padding: "12px",
               display: "flex",
               flexDirection: "column",
               gap: "8px",
@@ -434,7 +435,7 @@ export default function Generation(): JSX.Element {
                 margin: 0,
                 fontSize: "12px",
                 lineHeight: "1.7",
-                color: "#888",
+                color: "#B8A9E0",
               }}
             >
               Select how you want to create or choose the model for your virtual try-on
@@ -448,8 +449,8 @@ export default function Generation(): JSX.Element {
         <main
           style={{
             flex: 1,
-            background: "linear-gradient(135deg, #2d1b69 0%, #1a0b3e 100%)",
-            padding: "32px",
+            background: "linear-gradient(135deg, #1E0F3B 0%, #2D1B69 100%)",
+            padding: "40px 32px",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
@@ -483,7 +484,7 @@ export default function Generation(): JSX.Element {
                 style={{
                   margin: 0,
                   fontSize: "14px",
-                  color: "#aaa",
+                  color: "#B8A9E0",
                   lineHeight: "1.5",
                 }}
               >
@@ -525,27 +526,32 @@ export default function Generation(): JSX.Element {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
-                  borderRadius: "8px",
+                  borderRadius: "12px",
                   border: "none",
-                  background: selected ? "#6c3cff" : "#333",
+                  background: selected
+                    ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
+                    : "#3A256A",
                   color: "#fff",
                   fontSize: "16px",
                   fontWeight: 600,
                   cursor: selected ? "pointer" : "not-allowed",
                   opacity: selected ? 1 : 0.5,
-                  transition: "all 0.3s ease",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   whiteSpace: "nowrap",
+                  boxShadow: selected ? "0 4px 12px rgba(107, 70, 193, 0.4)" : "none",
                 }}
                 onMouseEnter={(e) => {
                   if (selected) {
-                    e.currentTarget.style.background = "#5a2ecc";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(108, 60, 255, 0.4)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, #7C5CFA, #8B5CF6)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(107, 70, 193, 0.5)";
+                    e.currentTarget.style.transform = "scale(1.02)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selected) {
-                    e.currentTarget.style.background = "#6c3cff";
-                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.background = "linear-gradient(135deg, #6B46C1, #8B5CF6)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(107, 70, 193, 0.4)";
+                    e.currentTarget.style.transform = "scale(1)";
                   }
                 }}
               >
