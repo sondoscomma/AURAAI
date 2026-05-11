@@ -59,7 +59,7 @@ export default function Pricing(): JSX.Element {
       className="w-full py-20 px-[104px]"
       id="Pricing"
       style={{
-        background: "linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%)",
+        background: "linear-gradient(135deg, #161616 0%, rgba(43, 20, 76, 0.5) 100%)",
       }}
     >
       <div className="mx-auto max-w-[1200px]">
@@ -81,10 +81,8 @@ export default function Pricing(): JSX.Element {
               key={index}
               className="relative flex flex-col rounded-2xl p-8 transition-all duration-300"
               style={{
-                background: "rgba(30, 27, 75, 0.6)",
-                border: plan.featured
-                  ? "1px solid rgba(183, 148, 244, 0.5)"
-                  : "1px solid rgba(147, 112, 219, 0.3)",
+                background: "#2B144C1A",
+                border: "1px solid #C6A6F71A",
                 borderRadius: "16px",
                 boxShadow: plan.featured
                   ? "0 0 20px rgba(183, 148, 244, 0.2), inset 0 2px 8px rgba(0, 0, 0, 0.3)"
