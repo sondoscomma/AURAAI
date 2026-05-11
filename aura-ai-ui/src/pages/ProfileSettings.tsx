@@ -8,6 +8,8 @@ type UsedModel = {
   _id?: string;
   title: string;
   method: string;
+  imageBase64?: string;
+  mimeType?: string;
   createdAt?: string;
 };
 
@@ -33,10 +35,9 @@ export default function ProfileSettings(): JSX.Element {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5000/api/models/history", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-
+      const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/history", {
+  headers: token ? { Authorization: `Bearer ${token}` } : {},
+});
         if (!res.ok) {
           setHistory([]);
           return;
@@ -307,19 +308,19 @@ export default function ProfileSettings(): JSX.Element {
 function HistoryView({ history }: { history: UsedModel[] }): JSX.Element {
   return (
     <div>
-      <h1 style={{ margin: 0, fontSize: 30 }}>History</h1>
+      <h1 style={{ margin: 0, fontSize: 30 }}>My Work</h1>
       <p style={{ margin: "8px 0 32px", color: "rgba(237,237,237,.55)" }}>
-        Models used by this account will appear here from the database.
+        Your generated images are saved here from your account database.
       </p>
 
       {history.length === 0 ? (
         <Panel>
           <div style={{ textAlign: "center", padding: "50px 20px", color: "rgba(237,237,237,.5)" }}>
-            No used models yet.
+            No generated images yet.
           </div>
         </Panel>
       ) : (
-        <div style={{ display: "grid", gap: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
           {history.map((item, index) => (
             <div
               key={item._id ?? index}
@@ -327,13 +328,31 @@ function HistoryView({ history }: { history: UsedModel[] }): JSX.Element {
                 borderRadius: 12,
                 background: "rgba(43,20,76,.75)",
                 border: "1px solid rgba(198,166,247,.16)",
-                padding: 20,
+                padding: 14,
               }}
             >
-              <strong>{item.title}</strong>
+              {item.imageBase64 && (
+                <img
+                  src={`data:${item.mimeType || "image/png"};base64,${item.imageBase64}`}
+                  alt={item.title}
+                  style={{
+                    width: "100%",
+                    height: 220,
+                    objectFit: "contain",
+                    borderRadius: 10,
+                    background: "#161616",
+                  }}
+                />
+              )}
+
+              <strong style={{ display: "block", marginTop: 12 }}>
+                {item.title}
+              </strong>
+
               <div style={{ marginTop: 6, color: "rgba(237,237,237,.55)", fontSize: 13 }}>
                 Method: {item.method}
               </div>
+
               {item.createdAt && (
                 <div style={{ marginTop: 4, color: "rgba(237,237,237,.4)", fontSize: 12 }}>
                   {new Date(item.createdAt).toLocaleString()}
