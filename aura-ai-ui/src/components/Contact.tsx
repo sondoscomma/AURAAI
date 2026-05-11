@@ -126,7 +126,7 @@ export default function Contact(): JSX.Element {
                   className="text-sm hover:underline"
                   style={{ color: "#E5E5E5" }}
                 >
-                  +1 (555) 123 - 4567
+                  +971 547072297
                 </a>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function Contact(): JSX.Element {
                   Location
                 </div>
                 <span className="text-sm" style={{ color: "#E5E5E5" }}>
-                  San Francisco, CA
+                  UAE , Alain 
                 </span>
               </div>
             </div>
