@@ -47,7 +47,7 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         borderRadius: "8px",
         padding: "16px",
         border: isCurrent ? "1px solid #9333EA" : "1px solid transparent",
-        background: isCurrent ? "#2D1B69" : isDone ? "#1F2937" : "#1F2937",
+        background: isCurrent ? "#2D1B69" : "#1A1425",
         boxShadow: isCurrent ? "0 4px 6px rgba(0,0,0,0.3)" : "none",
         opacity: isNext ? 0.55 : isLater ? 0.4 : 1,
         transition: "all 0.3s ease",
@@ -63,8 +63,8 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: isDone ? "#10B981" : isCurrent ? "#9333EA" : "#374151",
-          color: isDone ? "#fff" : isCurrent ? "#fff" : "#9CA3AF",
+          background: isDone ? "#10B981" : isCurrent ? "#9333EA" : "#3A256A",
+          color: isDone ? "#fff" : isCurrent ? "#fff" : "#8B7AB8",
           fontSize: "12px",
           fontWeight: 700,
         }}
@@ -77,7 +77,7 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           style={{
             fontSize: "14px",
             fontWeight: 500,
-            color: isDone ? "#9CA3AF" : isCurrent ? "#fff" : "#9CA3AF",
+            color: isDone ? "#8B7AB8" : isCurrent ? "#fff" : "#8B7AB8",
             lineHeight: "20px",
           }}
         >
@@ -125,15 +125,15 @@ function ChoiceCard({
         textAlign: "left",
         borderRadius: "12px",
         padding: 0,
-        border: selected ? "2px solid #9333EA" : "1px solid #374151",
-        background: "#1F1F2E",
+        border: selected ? "2px solid #9333EA" : "1px solid #3A256A",
+        background: "#1A1425",
         boxShadow: selected
           ? "0 0 0 4px rgba(147, 51, 234, 0.2), 0 4px 6px rgba(0,0,0,0.3)"
           : "0 4px 6px rgba(0,0,0,0.3)",
         transition: "all 0.3s ease",
         cursor: "pointer",
         width: "100%",
-        minHeight: "400px",
+        minHeight: "340px",
         outline: "none",
         overflow: "hidden",
         display: "flex",
@@ -154,11 +154,11 @@ function ChoiceCard({
       }}
     >
       {/* Image Area */}
-      <div style={{ padding: "12px", flexShrink: 0 }}>
+      <div style={{ padding: "10px", flexShrink: 0 }}>
         <div
           style={{
             width: "100%",
-            height: "180px",
+            height: "130px",
             borderRadius: "8px",
             overflow: "hidden",
             background: "#2D1B69",
@@ -180,7 +180,7 @@ function ChoiceCard({
       {/* Text Content */}
       <div
         style={{
-          padding: "0 16px 16px",
+          padding: "0 14px 14px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -188,10 +188,10 @@ function ChoiceCard({
       >
         <div
           style={{
-            fontSize: "18px",
+            fontSize: "16px",
             fontWeight: 600,
             color: "#FFFFFF",
-            margin: "0 0 8px 0",
+            margin: "0 0 6px 0",
           }}
         >
           {title}
@@ -199,10 +199,10 @@ function ChoiceCard({
 
         <p
           style={{
-            margin: "0 0 16px 0",
-            fontSize: "14px",
+            margin: "0 0 12px 0",
+            fontSize: "13px",
             lineHeight: "1.5",
-            color: "#9CA3AF",
+            color: "#8B7AB8",
           }}
         >
           {desc}
@@ -332,7 +332,7 @@ export default function Generation(): JSX.Element {
         inset: 0,
         width: "100vw",
         height: "100vh",
-        background: "#0d0d0d",
+        background: "#2B144C",
         color: "#fff",
         fontFamily: "Inter, system-ui, sans-serif",
         display: "flex",
@@ -347,8 +347,8 @@ export default function Generation(): JSX.Element {
           width: "100%",
           height: "64px",
           flexShrink: 0,
-          background: "#1A1A2E",
-          borderBottom: "1px solid #374151",
+          background: "#2B144C",
+          borderBottom: "1px solid #3A256A",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -386,8 +386,8 @@ export default function Generation(): JSX.Element {
               height: "32px",
               borderRadius: "50%",
               border: "none",
-              background: "#6B7280",
-              color: "#fff",
+              background: "#3A256A",
+              color: "#B8A9E0",
               cursor: "pointer",
               fontSize: "14px",
               display: "flex",
@@ -431,8 +431,8 @@ export default function Generation(): JSX.Element {
         <aside
           style={{
             width: "280px",
-            background: "#121212",
-            borderRight: "1px solid #374151",
+            background: "#2B144C",
+            borderRight: "1px solid #3A256A",
             padding: "24px",
             boxSizing: "border-box",
             display: "flex",
@@ -445,7 +445,7 @@ export default function Generation(): JSX.Element {
             style={{
               fontSize: "14px",
               fontWeight: 600,
-              color: "#fff",
+              color: "#B8A9E0",
               marginBottom: "16px",
               lineHeight: "20px",
             }}
@@ -463,8 +463,8 @@ export default function Generation(): JSX.Element {
             style={{
               marginTop: "24px",
               borderRadius: "8px",
-              border: "1px solid #374151",
-              background: "#1F2937",
+              border: "1px solid #3A256A",
+              background: "#1A1425",
               padding: "16px",
               display: "flex",
               flexDirection: "column",
@@ -475,7 +475,7 @@ export default function Generation(): JSX.Element {
               style={{
                 fontSize: "14px",
                 fontWeight: 600,
-                color: "#fff",
+                color: "#E0D6F0",
                 lineHeight: "20px",
               }}
             >
@@ -486,7 +486,7 @@ export default function Generation(): JSX.Element {
                 margin: 0,
                 fontSize: "12px",
                 lineHeight: "1.7",
-                color: "#9CA3AF",
+                color: "#8B7AB8",
               }}
             >
               Select how you want to create or choose the model for your virtual try-on
@@ -500,7 +500,7 @@ export default function Generation(): JSX.Element {
         <main
           style={{
             flex: 1,
-            background: "linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)",
+            background: "#2B144C",
             padding: "32px",
             boxSizing: "border-box",
             display: "flex",
@@ -580,7 +580,7 @@ export default function Generation(): JSX.Element {
                   border: "none",
                   background: selected
                     ? "linear-gradient(135deg, #9333EA, #A855F7)"
-                    : "#374151",
+                    : "#3A256A",
                   color: "#fff",
                   fontSize: "16px",
                   fontWeight: 500,
@@ -635,8 +635,8 @@ export default function Generation(): JSX.Element {
               width: "520px",
               maxHeight: "90vh",
               borderRadius: "12px",
-              background: "#1A1A2E",
-              border: "1px solid #374151",
+              background: "#1A1425",
+              border: "1px solid #3A256A",
               boxShadow: "0 20px 25px rgba(0, 0, 0, 0.5)",
               padding: "32px",
               display: "flex",
@@ -661,7 +661,7 @@ export default function Generation(): JSX.Element {
                   style={{
                     margin: "6px 0 0",
                     fontSize: "14px",
-                    color: "#9CA3AF",
+                    color: "#8B7AB8",
                   }}
                 >
                   Upload the garment you want to try on the model
@@ -673,9 +673,9 @@ export default function Generation(): JSX.Element {
                   width: "32px",
                   height: "32px",
                   borderRadius: "8px",
-                  border: "1px solid #374151",
+                  border: "1px solid #3A256A",
                   background: "transparent",
-                  color: "#9CA3AF",
+                  color: "#8B7AB8",
                   cursor: "pointer",
                   fontSize: "16px",
                   display: "flex",
@@ -701,7 +701,7 @@ export default function Generation(): JSX.Element {
                 justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
-                minHeight: "200px",
+                minHeight: "160px",
                 overflow: "hidden",
               }}
               onMouseEnter={(e) => {
@@ -724,7 +724,7 @@ export default function Generation(): JSX.Element {
                     alt="Garment preview"
                     style={{
                       width: "100%",
-                      height: "200px",
+                      height: "160px",
                       objectFit: "contain",
                       display: "block",
                       borderRadius: "6px",
@@ -752,7 +752,7 @@ export default function Generation(): JSX.Element {
                   <div style={{ fontSize: "16px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>
                     Click to upload garment
                   </div>
-                  <div style={{ fontSize: "13px", color: "#9CA3AF" }}>
+                  <div style={{ fontSize: "13px", color: "#8B7AB8" }}>
                     JPG, PNG or WEBP (max 10MB)
                   </div>
                 </>
@@ -774,9 +774,9 @@ export default function Generation(): JSX.Element {
                 onClick={() => fileInputRef.current?.click()}
                 style={{
                   background: "transparent",
-                  border: "1px solid #374151",
+                  border: "1px solid #3A256A",
                   borderRadius: "8px",
-                  color: "#9CA3AF",
+                  color: "#8B7AB8",
                   padding: "10px 16px",
                   cursor: "pointer",
                   fontSize: "13px",
@@ -796,19 +796,19 @@ export default function Generation(): JSX.Element {
                   height: "48px",
                   padding: "0 24px",
                   borderRadius: "8px",
-                  border: "1px solid #374151",
-                  background: "#374151",
-                  color: "#9CA3AF",
+                  border: "1px solid #3A256A",
+                  background: "#1A1425",
+                  color: "#B8A9E0",
                   fontSize: "14px",
                   fontWeight: 500,
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#4B5563";
+                  e.currentTarget.style.background = "#2D1B69";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#374151";
+                  e.currentTarget.style.background = "#1A1425";
                 }}
               >
                 Skip for Now
@@ -823,7 +823,7 @@ export default function Generation(): JSX.Element {
                   border: "none",
                   background: garmentPreview
                     ? "linear-gradient(135deg, #9333EA, #A855F7)"
-                    : "#374151",
+                    : "#3A256A",
                   color: "#fff",
                   fontSize: "14px",
                   fontWeight: 500,
