@@ -94,6 +94,23 @@ export default function Pricing(): JSX.Element {
                 boxShadow: plan.featured
                   ? "0 0 20px rgba(183, 148, 244, 0.2), inset 0 2px 8px rgba(0, 0, 0, 0.3)"
                   : "inset 0 2px 8px rgba(0, 0, 0, 0.3)",
+                transition: "all 0.4s ease",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow =
+                  "0 0 30px rgba(183, 148, 244, 0.35), 0 0 60px rgba(139, 92, 246, 0.2), inset 0 2px 8px rgba(0, 0, 0, 0.3)";
+                e.currentTarget.style.border = "1px solid rgba(183, 148, 244, 0.4)";
+                e.currentTarget.style.transform = "translateY(-6px)";
+                e.currentTarget.style.background = "rgba(43, 20, 76, 0.25)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = plan.featured
+                  ? "0 0 20px rgba(183, 148, 244, 0.2), inset 0 2px 8px rgba(0, 0, 0, 0.3)"
+                  : "inset 0 2px 8px rgba(0, 0, 0, 0.3)";
+                e.currentTarget.style.border = "1px solid #C6A6F71A";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.background = "#2B144C1A";
               }}
             >
               {/* Badge */}
