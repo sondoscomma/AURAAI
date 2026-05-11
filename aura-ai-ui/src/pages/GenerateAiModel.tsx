@@ -114,30 +114,30 @@ export default function GenerateAiModel(): JSX.Element {
       setIsGenerating(true);
       setError("");
 
- const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-if (!token) {
-  setError("Please login first.");
-  nav("/login");
-  return;
-}
+      if (!token) {
+        setError("Please login first.");
+        nav("/login");
+        return;
+      }
 
-const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify({
-    prompt,
-    gender,
-    ageRange,
-    ethnicity,
-    bodyType,
-    clothingStyle,
-    pose,
-  }),
-});
+      const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          prompt,
+          gender,
+          ageRange,
+          ethnicity,
+          bodyType,
+          clothingStyle,
+          pose,
+        }),
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -920,32 +920,6 @@ const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/gen
           )}
 
           <div style={{ flex: 1 }} />
-
-          <button
-            onClick={() => nav("/app/upload-garment")}
-            style={{
-              height: 48,
-              borderRadius: 10,
-              border: "1px solid rgba(237,237,237,0.15)",
-              background: "rgba(237,237,237,0.06)",
-              color: COLORS.platinum,
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: FONTS.primary,
-              transition: "all 0.3s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(198,166,247,0.15)";
-              e.currentTarget.style.borderColor = "rgba(198,166,247,0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(237,237,237,0.06)";
-              e.currentTarget.style.borderColor = "rgba(237,237,237,0.15)";
-            }}
-          >
-            Confirm Selection →
-          </button>
         </aside>
       </div>
     </div>
