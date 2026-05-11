@@ -35,9 +35,9 @@ export default function ProfileSettings(): JSX.Element {
       try {
         const token = localStorage.getItem("token");
 
-      const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/history", {
-  headers: token ? { Authorization: `Bearer ${token}` } : {},
-});
+        const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/history", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (!res.ok) {
           setHistory([]);
           return;
@@ -54,15 +54,19 @@ export default function ProfileSettings(): JSX.Element {
 
     const savedProfile = localStorage.getItem("aura_profile");
     if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
-      setFirstName(profile.firstName ?? "");
-      setLastName(profile.lastName ?? "");
-      setEmail(profile.email ?? "");
-      setBio(profile.bio ?? "");
-      setEmailNotifications(profile.emailNotifications ?? true);
-      setDarkMode(profile.darkMode ?? true);
-      setDefaultModel(profile.defaultModel ?? "");
-      setAvatar(profile.avatar || null);
+      try {
+        const profile = JSON.parse(savedProfile);
+        setFirstName(profile.firstName ?? "");
+        setLastName(profile.lastName ?? "");
+        setEmail(profile.email ?? "");
+        setBio(profile.bio ?? "");
+        setEmailNotifications(profile.emailNotifications ?? true);
+        setDarkMode(profile.darkMode ?? true);
+        setDefaultModel(profile.defaultModel ?? "");
+        setAvatar(profile.avatar || null);
+      } catch {
+        localStorage.removeItem("aura_profile");
+      }
     }
   }, []);
 
