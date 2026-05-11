@@ -45,13 +45,11 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         alignItems: "center",
         gap: "12px",
         borderRadius: "8px",
-        padding: "16px",
-        border: isCurrent ? "1px solid #9333EA" : "1px solid transparent",
-        background: isCurrent ? "#2D1B69" : "#1A1425",
-        boxShadow: isCurrent ? "0 4px 6px rgba(0,0,0,0.3)" : "none",
-        opacity: isNext ? 0.55 : isLater ? 0.4 : 1,
+        padding: "14px 16px",
+        border: isCurrent ? "1px solid rgba(139, 92, 246, 0.4)" : "1px solid transparent",
+        background: isCurrent ? "rgba(139, 92, 246, 0.1)" : "transparent",
+        marginBottom: "8px",
         transition: "all 0.3s ease",
-        marginBottom: "12px",
       }}
     >
       <div
@@ -63,8 +61,12 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: isDone ? "#10B981" : isCurrent ? "#9333EA" : "#3A256A",
-          color: isDone ? "#fff" : isCurrent ? "#fff" : "#8B7AB8",
+          background: isDone
+            ? "#10B981"
+            : isCurrent
+            ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
+            : "rgba(255,255,255,0.1)",
+          color: isDone ? "#fff" : isCurrent ? "#fff" : "rgba(255,255,255,0.4)",
           fontSize: "12px",
           fontWeight: 700,
         }}
@@ -76,8 +78,12 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         <div
           style={{
             fontSize: "14px",
-            fontWeight: 500,
-            color: isDone ? "#8B7AB8" : isCurrent ? "#fff" : "#8B7AB8",
+            fontWeight: isCurrent ? 600 : 400,
+            color: isDone
+              ? "rgba(255,255,255,0.5)"
+              : isCurrent
+              ? "#FFFFFF"
+              : "rgba(255,255,255,0.4)",
             lineHeight: "20px",
           }}
         >
@@ -86,7 +92,11 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         <div
           style={{
             fontSize: "12px",
-            color: isDone ? "rgba(16,185,129,0.7)" : isCurrent ? "rgba(255,255,255,0.6)" : "#6B7280",
+            color: isDone
+              ? "rgba(16,185,129,0.7)"
+              : isCurrent
+              ? "rgba(255,255,255,0.5)"
+              : "rgba(255,255,255,0.25)",
             marginTop: "2px",
           }}
         >
@@ -125,62 +135,64 @@ function ChoiceCard({
         textAlign: "left",
         borderRadius: "12px",
         padding: 0,
-        border: selected ? "2px solid #9333EA" : "1px solid #3A256A",
-        background: "#1A1425",
+        border: selected
+          ? "1px solid rgba(139, 92, 246, 0.6)"
+          : "1px solid rgba(255,255,255,0.08)",
+        background: "#1A1A2A",
         boxShadow: selected
-          ? "0 0 0 4px rgba(147, 51, 234, 0.2), 0 4px 6px rgba(0,0,0,0.3)"
-          : "0 4px 6px rgba(0,0,0,0.3)",
+          ? "0 0 20px rgba(139, 92, 246, 0.25), 0 8px 32px rgba(0,0,0,0.4)"
+          : "0 8px 32px rgba(0,0,0,0.3)",
         transition: "all 0.3s ease",
         cursor: "pointer",
         width: "100%",
-        minHeight: "340px",
         outline: "none",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        transform: selected ? "translateY(-2px)" : "none",
+        transform: selected ? "translateY(-4px)" : "none",
       }}
       onMouseEnter={(e) => {
         if (!selected) {
-          e.currentTarget.style.transform = "translateY(-2px)";
-          e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3), 0 0 0 4px rgba(147,51,234,0.1)";
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow =
+            "0 8px 32px rgba(0,0,0,0.3), 0 0 15px rgba(139,92,246,0.15)";
+          e.currentTarget.style.border = "1px solid rgba(139,92,246,0.3)";
         }
       }}
       onMouseLeave={(e) => {
         if (!selected) {
           e.currentTarget.style.transform = "none";
-          e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
+          e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.3)";
+          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
         }
       }}
     >
-      {/* Image Area */}
-      <div style={{ padding: "10px", flexShrink: 0 }}>
-        <div
+      {/* Image Area - square format */}
+      <div
+        style={{
+          width: "100%",
+          aspectRatio: "1 / 1",
+          overflow: "hidden",
+          background: "#2D1B69",
+          borderRadius: "12px 12px 0 0",
+        }}
+      >
+        <img
+          src={image}
+          alt={title}
           style={{
             width: "100%",
-            height: "130px",
-            borderRadius: "8px",
-            overflow: "hidden",
-            background: "#2D1B69",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
           }}
-        >
-          <img
-            src={image}
-            alt={title}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
-        </div>
+        />
       </div>
 
       {/* Text Content */}
       <div
         style={{
-          padding: "0 14px 14px",
+          padding: "20px 24px 24px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -188,10 +200,11 @@ function ChoiceCard({
       >
         <div
           style={{
-            fontSize: "16px",
+            fontSize: "18px",
             fontWeight: 600,
             color: "#FFFFFF",
-            margin: "0 0 6px 0",
+            margin: "0 0 8px 0",
+            lineHeight: "24px",
           }}
         >
           {title}
@@ -199,10 +212,10 @@ function ChoiceCard({
 
         <p
           style={{
-            margin: "0 0 12px 0",
-            fontSize: "13px",
-            lineHeight: "1.5",
-            color: "#8B7AB8",
+            margin: "0 0 16px 0",
+            fontSize: "14px",
+            lineHeight: "1.6",
+            color: "rgba(255,255,255,0.5)",
           }}
         >
           {desc}
@@ -216,11 +229,13 @@ function ChoiceCard({
             alignItems: "center",
             gap: "8px",
             fontSize: "12px",
-            color: selected ? "#9333EA" : "#6B7280",
+            color: selected ? "#A78BFA" : "rgba(255,255,255,0.3)",
+            fontWeight: 500,
+            transition: "color 0.3s ease",
           }}
         >
           <span style={{ fontSize: "14px" }}>{metaIcon}</span>
-          <span style={{ fontWeight: 500 }}>{meta}</span>
+          <span>{meta}</span>
         </div>
       </div>
     </button>
@@ -348,7 +363,7 @@ export default function Generation(): JSX.Element {
           height: "64px",
           flexShrink: 0,
           background: "#2B144C",
-          borderBottom: "1px solid #3A256A",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -359,10 +374,10 @@ export default function Generation(): JSX.Element {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div
             style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              background: "#9333EA",
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #6B46C1, #8B5CF6)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -374,25 +389,34 @@ export default function Generation(): JSX.Element {
           >
             A
           </div>
-          <span style={{ fontWeight: 600, fontSize: "16px", color: "#fff" }}>
+          <span style={{ fontWeight: 600, fontSize: "18px", color: "#fff" }}>
             AURA AI
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button
             style={{
-              width: "32px",
-              height: "32px",
+              width: "36px",
+              height: "36px",
               borderRadius: "50%",
               border: "none",
-              background: "#3A256A",
-              color: "#B8A9E0",
+              background: "rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.5)",
               cursor: "pointer",
               fontSize: "14px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+              e.currentTarget.style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.color = "rgba(255,255,255,0.5)";
             }}
           >
             ?
@@ -400,17 +424,25 @@ export default function Generation(): JSX.Element {
           <button
             onClick={() => nav("/app/profile")}
             style={{
-              width: "32px",
-              height: "32px",
+              width: "36px",
+              height: "36px",
               borderRadius: "50%",
               border: "none",
-              background: "#9333EA",
+              background: "linear-gradient(135deg, #6B46C1, #8B5CF6)",
               color: "#fff",
               cursor: "pointer",
               fontSize: "14px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              boxShadow: "0 0 10px rgba(139, 92, 246, 0.3)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 16px rgba(139, 92, 246, 0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 10px rgba(139, 92, 246, 0.3)";
             }}
           >
             👤
@@ -431,9 +463,9 @@ export default function Generation(): JSX.Element {
         <aside
           style={{
             width: "280px",
-            background: "#2B144C",
-            borderRight: "1px solid #3A256A",
-            padding: "24px",
+            background: "#1E0F3B",
+            borderRight: "1px solid rgba(255,255,255,0.06)",
+            padding: "28px 20px",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
@@ -443,11 +475,13 @@ export default function Generation(): JSX.Element {
         >
           <div
             style={{
-              fontSize: "14px",
+              fontSize: "11px",
               fontWeight: 600,
-              color: "#B8A9E0",
-              marginBottom: "16px",
-              lineHeight: "20px",
+              color: "rgba(255,255,255,0.4)",
+              textTransform: "uppercase",
+              letterSpacing: "1.2px",
+              marginBottom: "20px",
+              lineHeight: "16px",
             }}
           >
             Generation Flow
@@ -461,22 +495,22 @@ export default function Generation(): JSX.Element {
 
           <div
             style={{
-              marginTop: "24px",
-              borderRadius: "8px",
-              border: "1px solid #3A256A",
-              background: "#1A1425",
-              padding: "16px",
+              marginTop: "28px",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.03)",
+              padding: "20px",
               display: "flex",
               flexDirection: "column",
-              gap: "8px",
+              gap: "10px",
             }}
           >
             <div
               style={{
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: 600,
-                color: "#E0D6F0",
-                lineHeight: "20px",
+                color: "rgba(255,255,255,0.7)",
+                lineHeight: "18px",
               }}
             >
               Instructions
@@ -486,7 +520,7 @@ export default function Generation(): JSX.Element {
                 margin: 0,
                 fontSize: "12px",
                 lineHeight: "1.7",
-                color: "#8B7AB8",
+                color: "rgba(255,255,255,0.35)",
               }}
             >
               Select how you want to create or choose the model for your virtual try-on
@@ -501,7 +535,7 @@ export default function Generation(): JSX.Element {
           style={{
             flex: 1,
             background: "#2B144C",
-            padding: "32px",
+            padding: "40px",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
@@ -521,7 +555,7 @@ export default function Generation(): JSX.Element {
             <div>
               <h1
                 style={{
-                  margin: "0 0 8px 0",
+                  margin: "0 0 10px 0",
                   fontSize: "28px",
                   fontWeight: 700,
                   color: "#fff",
@@ -534,7 +568,7 @@ export default function Generation(): JSX.Element {
                 style={{
                   margin: 0,
                   fontSize: "15px",
-                  color: "rgba(255,255,255,0.6)",
+                  color: "rgba(255,255,255,0.45)",
                   lineHeight: "1.5",
                 }}
               >
@@ -576,31 +610,36 @@ export default function Generation(): JSX.Element {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   background: selected
-                    ? "linear-gradient(135deg, #9333EA, #A855F7)"
-                    : "#3A256A",
-                  color: "#fff",
-                  fontSize: "16px",
-                  fontWeight: 500,
+                    ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
+                    : "rgba(255,255,255,0.08)",
+                  color: selected ? "#fff" : "rgba(255,255,255,0.3)",
+                  fontSize: "15px",
+                  fontWeight: 600,
                   cursor: selected ? "pointer" : "not-allowed",
-                  opacity: selected ? 1 : 0.5,
                   transition: "all 0.3s ease",
                   whiteSpace: "nowrap",
-                  boxShadow: selected ? "0 4px 6px rgba(0,0,0,0.1)" : "none",
+                  boxShadow: selected
+                    ? "0 4px 20px rgba(139, 92, 246, 0.35)"
+                    : "none",
                 }}
                 onMouseEnter={(e) => {
                   if (selected) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #A855F7, #C084FC)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.4)";
-                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, #7C4DCF, #9D6FF2)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 28px rgba(139, 92, 246, 0.5)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selected) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #9333EA, #A855F7)";
-                    e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, #6B46C1, #8B5CF6)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 20px rgba(139, 92, 246, 0.35)";
                     e.currentTarget.style.transform = "translateY(0)";
                   }
                 }}
@@ -624,7 +663,7 @@ export default function Generation(): JSX.Element {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 10000,
-            backdropFilter: "blur(4px)",
+            backdropFilter: "blur(8px)",
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowUploadModal(false);
@@ -634,10 +673,10 @@ export default function Generation(): JSX.Element {
             style={{
               width: "520px",
               maxHeight: "90vh",
-              borderRadius: "12px",
-              background: "#1A1425",
-              border: "1px solid #3A256A",
-              boxShadow: "0 20px 25px rgba(0, 0, 0, 0.5)",
+              borderRadius: "14px",
+              background: "#1E0F3B",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.6)",
               padding: "32px",
               display: "flex",
               flexDirection: "column",
@@ -645,7 +684,13 @@ export default function Generation(): JSX.Element {
             }}
           >
             {/* Modal Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
               <div>
                 <h2
                   style={{
@@ -659,9 +704,9 @@ export default function Generation(): JSX.Element {
                 </h2>
                 <p
                   style={{
-                    margin: "6px 0 0",
+                    margin: "8px 0 0",
                     fontSize: "14px",
-                    color: "#8B7AB8",
+                    color: "rgba(255,255,255,0.4)",
                   }}
                 >
                   Upload the garment you want to try on the model
@@ -673,14 +718,23 @@ export default function Generation(): JSX.Element {
                   width: "32px",
                   height: "32px",
                   borderRadius: "8px",
-                  border: "1px solid #3A256A",
-                  background: "transparent",
-                  color: "#8B7AB8",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "rgba(255,255,255,0.4)",
                   cursor: "pointer",
                   fontSize: "16px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.4)";
                 }}
               >
                 ✕
@@ -691,29 +745,31 @@ export default function Generation(): JSX.Element {
             <div
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: "2px dashed #9333EA",
-                borderRadius: "8px",
-                padding: garmentPreview ? "0" : "32px",
-                background: garmentPreview ? "transparent" : "#2D1B69",
+                border: "2px dashed rgba(139, 92, 246, 0.4)",
+                borderRadius: "12px",
+                padding: garmentPreview ? "0" : "40px 32px",
+                background: garmentPreview
+                  ? "transparent"
+                  : "rgba(139, 92, 246, 0.06)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
-                minHeight: "160px",
+                minHeight: garmentPreview ? "auto" : "180px",
                 overflow: "hidden",
               }}
               onMouseEnter={(e) => {
                 if (!garmentPreview) {
-                  e.currentTarget.style.borderColor = "#A855F7";
-                  e.currentTarget.style.background = "rgba(147, 51, 234, 0.15)";
+                  e.currentTarget.style.borderColor = "rgba(139, 92, 246, 0.7)";
+                  e.currentTarget.style.background = "rgba(139, 92, 246, 0.1)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!garmentPreview) {
-                  e.currentTarget.style.borderColor = "#9333EA";
-                  e.currentTarget.style.background = "#2D1B69";
+                  e.currentTarget.style.borderColor = "rgba(139, 92, 246, 0.4)";
+                  e.currentTarget.style.background = "rgba(139, 92, 246, 0.06)";
                 }
               }}
             >
@@ -724,20 +780,21 @@ export default function Generation(): JSX.Element {
                     alt="Garment preview"
                     style={{
                       width: "100%",
-                      height: "160px",
+                      height: "200px",
                       objectFit: "contain",
                       display: "block",
-                      borderRadius: "6px",
+                      borderRadius: "10px",
                     }}
                   />
                   <div
                     style={{
                       position: "absolute",
-                      top: "8px",
-                      right: "8px",
-                      background: "rgba(0,0,0,0.6)",
-                      borderRadius: "6px",
-                      padding: "4px 8px",
+                      top: "10px",
+                      right: "10px",
+                      background: "rgba(16, 185, 129, 0.15)",
+                      border: "1px solid rgba(16, 185, 129, 0.3)",
+                      borderRadius: "8px",
+                      padding: "4px 12px",
                       fontSize: "12px",
                       color: "#10B981",
                       fontWeight: 600,
@@ -748,11 +805,51 @@ export default function Generation(): JSX.Element {
                 </div>
               ) : (
                 <>
-                  <span style={{ fontSize: "40px", marginBottom: "12px", opacity: 0.5 }}>📁</span>
-                  <div style={{ fontSize: "16px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>
+                  <div
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      borderRadius: "14px",
+                      background: "rgba(139, 92, 246, 0.12)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M12 16V8M8 12L12 8L16 12"
+                        stroke="#A78BFA"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M20 16.7V19.2C20 20.3 19.3 21 18.2 21H5.8C4.7 21 4 20.3 4 19.2V16.7"
+                        stroke="#A78BFA"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.8)",
+                      marginBottom: "6px",
+                    }}
+                  >
                     Click to upload garment
                   </div>
-                  <div style={{ fontSize: "13px", color: "#8B7AB8" }}>
+                  <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)" }}>
                     JPG, PNG or WEBP (max 10MB)
                   </div>
                 </>
@@ -773,14 +870,23 @@ export default function Generation(): JSX.Element {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  background: "transparent",
-                  border: "1px solid #3A256A",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
                   borderRadius: "8px",
-                  color: "#8B7AB8",
+                  color: "rgba(255,255,255,0.5)",
                   padding: "10px 16px",
                   cursor: "pointer",
                   fontSize: "13px",
                   width: "fit-content",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.5)";
                 }}
               >
                 Change Garment
@@ -795,20 +901,22 @@ export default function Generation(): JSX.Element {
                 style={{
                   height: "48px",
                   padding: "0 24px",
-                  borderRadius: "8px",
-                  border: "1px solid #3A256A",
-                  background: "#1A1425",
-                  color: "#B8A9E0",
+                  borderRadius: "10px",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "rgba(255,255,255,0.5)",
                   fontSize: "14px",
                   fontWeight: 500,
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#2D1B69";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.8)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#1A1425";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.5)";
                 }}
               >
                 Skip for Now
@@ -819,29 +927,36 @@ export default function Generation(): JSX.Element {
                 style={{
                   height: "48px",
                   padding: "0 28px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   background: garmentPreview
-                    ? "linear-gradient(135deg, #9333EA, #A855F7)"
-                    : "#3A256A",
-                  color: "#fff",
+                    ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
+                    : "rgba(255,255,255,0.08)",
+                  color: garmentPreview ? "#fff" : "rgba(255,255,255,0.3)",
                   fontSize: "14px",
-                  fontWeight: 500,
+                  fontWeight: 600,
                   cursor: garmentPreview ? "pointer" : "not-allowed",
-                  opacity: garmentPreview ? 1 : 0.5,
                   transition: "all 0.3s ease",
-                  boxShadow: garmentPreview ? "0 4px 6px rgba(147, 51, 234, 0.3)" : "none",
+                  boxShadow: garmentPreview
+                    ? "0 4px 20px rgba(139, 92, 246, 0.35)"
+                    : "none",
                 }}
                 onMouseEnter={(e) => {
                   if (garmentPreview) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #A855F7, #C084FC)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.4)";
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, #7C4DCF, #9D6FF2)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 28px rgba(139, 92, 246, 0.5)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (garmentPreview) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #9333EA, #A855F7)";
-                    e.currentTarget.style.boxShadow = "0 4px 6px rgba(147, 51, 234, 0.3)";
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, #6B46C1, #8B5CF6)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 20px rgba(139, 92, 246, 0.35)";
+                    e.currentTarget.style.transform = "translateY(0)";
                   }
                 }}
               >
