@@ -1,45 +1,26 @@
-// GradientButton.tsx
-import type { JSX } from "react";
+import React, { type JSX } from "react";
+import clsx from "clsx";
 
-type GradientButtonProps = {
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-};
+type Props = React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function GradientButton({
+  className,
   children,
-  className = "",
-  onClick,
-}: GradientButtonProps): JSX.Element {
+  ...props
+}: Props): JSX.Element {
   return (
     <button
-      onClick={onClick}
-      className={className}
-      style={{
-        background: "linear-gradient(to bottom, #532C86, #2B144C)",
-        border: "1px solid #3AEDFF",
-        borderRadius: "8px",
-        color: "#FFFFFF",
-        fontWeight: "bold",
-        padding: "8px 24px",
-        height: "40px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        fontSize: "14px",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "#7DF2FF";
-        e.currentTarget.style.filter = "brightness(1.15)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "#3AEDFF";
-        e.currentTarget.style.filter = "brightness(1)";
-      }}
+      className={clsx(
+        "h-[40px] px-[24px] py-[8px]",
+        "rounded-[8px]",
+        "text-sm font-semibold text-white",
+        "bg-[linear-gradient( 90deg, #C6A6F7 0%, #532C86 100%)]",
+        "shadow-[0_6px_20px_rgba(83,44,134,0.35)]",
+        "hover:brightness-110 active:scale-[0.98]",
+        "transition-all duration-200",
+        className
+      )}
+      {...props}
     >
       {children}
     </button>
