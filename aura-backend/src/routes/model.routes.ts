@@ -1,9 +1,11 @@
 import { Router } from "express";
 import OpenAI from "openai";
+import Generation from "../models/Generation";
+import { requireAuth, type AuthRequest } from "../middleware/auth";
 
 const router = Router();
 
-router.post("/generate", async (req, res) => {
+router.post("/generate", requireAuth, async (req: AuthRequest, res) => {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -59,18 +61,43 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
       });
     }
 
-    return res.json({
+    const saved = await Generation.create({
+      userId: req.userId,
+      title: `${gender} ${ethnicity} Model`,
+      method: "AI Generation",
       imageBase64,
       mimeType: "image/png",
+      prompt: finalPrompt,
+    });
+
+    return res.json({
+      id: saved._id,
+      title: saved.title,
+      method: saved.method,
+      imageBase64,
+      mimeType: "image/png",
+      createdAt: saved.createdAt,
       description: finalPrompt,
     });
   } catch (error: any) {
     console.error("OpenAI image generation error:", error);
 
     return res.status(error?.status || 500).json({
-      message:
-        error?.message ||
-        "OpenAI image generation failed",
+      message: error?.message || "OpenAI image generation failed",
+    });
+  }
+});
+
+router.get("/history", requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const history = await Generation.find({ userId: req.userId })
+      .sort({ createdAt: -1 })
+      .select("_id title method imageBase64 mimeType createdAt");
+
+    return res.json(history);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to load history",
     });
   }
 });

@@ -46,11 +46,12 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         gap: "12px",
         borderRadius: "8px",
         padding: "16px",
-        border: isCurrent ? "2px solid #6B46C1" : "1px solid transparent",
-        background: isCurrent ? "#6B46C1" : isDone ? "rgba(34,197,94,0.15)" : "#3A256A",
-        boxShadow: isCurrent ? "0 2px 8px rgba(107, 70, 193, 0.3)" : "none",
-        opacity: isNext ? 0.55 : isLater ? 0.3 : 1,
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        border: isCurrent ? "1px solid #9333EA" : "1px solid transparent",
+        background: isCurrent ? "#2D1B69" : isDone ? "#1F2937" : "#1F2937",
+        boxShadow: isCurrent ? "0 4px 6px rgba(0,0,0,0.3)" : "none",
+        opacity: isNext ? 0.55 : isLater ? 0.4 : 1,
+        transition: "all 0.3s ease",
+        marginBottom: "12px",
       }}
     >
       <div
@@ -62,9 +63,9 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: isDone ? "#22c55e" : isCurrent ? "#fff" : "#8B5CF6",
-          color: isDone ? "#fff" : isCurrent ? "#6B46C1" : "#fff",
-          fontSize: isDone ? "14px" : "12px",
+          background: isDone ? "#10B981" : isCurrent ? "#9333EA" : "#374151",
+          color: isDone ? "#fff" : isCurrent ? "#fff" : "#9CA3AF",
+          fontSize: "12px",
           fontWeight: 700,
         }}
       >
@@ -75,8 +76,8 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         <div
           style={{
             fontSize: "14px",
-            fontWeight: 700,
-            color: isDone ? "#22c55e" : isCurrent ? "#fff" : "#8B7AB8",
+            fontWeight: 500,
+            color: isDone ? "#9CA3AF" : isCurrent ? "#fff" : "#9CA3AF",
             lineHeight: "20px",
           }}
         >
@@ -85,7 +86,7 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         <div
           style={{
             fontSize: "12px",
-            color: isDone ? "rgba(34,197,94,0.7)" : isCurrent ? "rgba(255,255,255,0.7)" : "rgba(139,122,184,0.6)",
+            color: isDone ? "rgba(16,185,129,0.7)" : isCurrent ? "rgba(255,255,255,0.6)" : "#6B7280",
             marginTop: "2px",
           }}
         >
@@ -122,17 +123,17 @@ function ChoiceCard({
       style={{
         position: "relative",
         textAlign: "left",
-        borderRadius: "16px",
+        borderRadius: "12px",
         padding: 0,
-        border: selected ? "2px solid #8B5CF6" : "1px solid #3A256A",
-        background: "#1A1425",
+        border: selected ? "2px solid #9333EA" : "1px solid #374151",
+        background: "#1F1F2E",
         boxShadow: selected
-          ? "0 0 20px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3)"
-          : "0 4px 12px rgba(0, 0, 0, 0.3)",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          ? "0 0 0 4px rgba(147, 51, 234, 0.2), 0 4px 6px rgba(0,0,0,0.3)"
+          : "0 4px 6px rgba(0,0,0,0.3)",
+        transition: "all 0.3s ease",
         cursor: "pointer",
         width: "100%",
-        minHeight: "420px",
+        minHeight: "400px",
         outline: "none",
         overflow: "hidden",
         display: "flex",
@@ -142,25 +143,25 @@ function ChoiceCard({
       onMouseEnter={(e) => {
         if (!selected) {
           e.currentTarget.style.transform = "translateY(-2px)";
-          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 12px rgba(139, 92, 246, 0.15)";
+          e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3), 0 0 0 4px rgba(147,51,234,0.1)";
         }
       }}
       onMouseLeave={(e) => {
         if (!selected) {
           e.currentTarget.style.transform = "none";
-          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
+          e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
         }
       }}
     >
       {/* Image Area */}
-      <div style={{ padding: "14px 14px 0", flexShrink: 0 }}>
+      <div style={{ padding: "12px", flexShrink: 0 }}>
         <div
           style={{
             width: "100%",
             height: "180px",
-            borderRadius: "12px",
+            borderRadius: "8px",
             overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+            background: "#2D1B69",
           }}
         >
           <img
@@ -179,7 +180,7 @@ function ChoiceCard({
       {/* Text Content */}
       <div
         style={{
-          padding: "16px 20px 20px",
+          padding: "0 16px 16px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -187,9 +188,9 @@ function ChoiceCard({
       >
         <div
           style={{
-            fontSize: "20px",
+            fontSize: "18px",
             fontWeight: 600,
-            color: "#fff",
+            color: "#FFFFFF",
             margin: "0 0 8px 0",
           }}
         >
@@ -200,8 +201,8 @@ function ChoiceCard({
           style={{
             margin: "0 0 16px 0",
             fontSize: "14px",
-            lineHeight: "1.6",
-            color: "#B8A9E0",
+            lineHeight: "1.5",
+            color: "#9CA3AF",
           }}
         >
           {desc}
@@ -214,20 +215,12 @@ function ChoiceCard({
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            paddingTop: "12px",
-            borderTop: "1px solid #3A256A",
+            fontSize: "12px",
+            color: selected ? "#9333EA" : "#6B7280",
           }}
         >
-          <span style={{ fontSize: "16px" }}>{metaIcon}</span>
-          <span
-            style={{
-              fontSize: "13px",
-              fontWeight: 500,
-              color: selected ? "#8B5CF6" : "#8B7AB8",
-            }}
-          >
-            {meta}
-          </span>
+          <span style={{ fontSize: "14px" }}>{metaIcon}</span>
+          <span style={{ fontWeight: 500 }}>{meta}</span>
         </div>
       </div>
     </button>
@@ -291,7 +284,6 @@ export default function Generation(): JSX.Element {
   };
 
   const handleUploadAndProceed = (): void => {
-    // Update steps: step 1 done, step 2 done (uploaded), step 3 current
     setSteps([
       { id: 1, title: "Choose Model", subtitle: "Completed", state: "done" },
       { id: 2, title: "Upload Garment", subtitle: "Completed", state: "done" },
@@ -301,7 +293,6 @@ export default function Generation(): JSX.Element {
 
     setShowUploadModal(false);
 
-    // Navigate to the selected page
     const routeBySelection: Record<ModelChoice, string> = {
       upload: "/app/upload-your-model",
       generate: "/app/generate-ai-model",
@@ -314,7 +305,6 @@ export default function Generation(): JSX.Element {
   };
 
   const handleSkipUpload = (): void => {
-    // Update steps: step 1 done, step 2 still next
     setSteps([
       { id: 1, title: "Choose Model", subtitle: "Completed", state: "done" },
       { id: 2, title: "Upload Garment", subtitle: "Next step", state: "next" },
@@ -344,7 +334,7 @@ export default function Generation(): JSX.Element {
         height: "100vh",
         background: "#0d0d0d",
         color: "#fff",
-        fontFamily: "'Bricolage Grotesque', 'Inter', system-ui, sans-serif",
+        fontFamily: "Inter, system-ui, sans-serif",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -355,10 +345,10 @@ export default function Generation(): JSX.Element {
       <header
         style={{
           width: "100%",
-          height: "80px",
+          height: "64px",
           flexShrink: 0,
-          background: "#1E0F3B",
-          borderBottom: "1px solid #3A256A",
+          background: "#1A1A2E",
+          borderBottom: "1px solid #374151",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -366,38 +356,40 @@ export default function Generation(): JSX.Element {
           boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div
             style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #6B46C1, #8B5CF6)",
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "#9333EA",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "18px",
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "#fff",
               flexShrink: 0,
             }}
           >
-            ✎
+            A
           </div>
-          <span style={{ fontWeight: 700, fontSize: "18px", letterSpacing: "0.04em" }}>
+          <span style={{ fontWeight: 600, fontSize: "16px", color: "#fff" }}>
             AURA AI
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button
             style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              border: "1px solid #3A256A",
-              background: "transparent",
-              color: "rgba(255,255,255,0.7)",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              border: "none",
+              background: "#6B7280",
+              color: "#fff",
               cursor: "pointer",
-              fontSize: "16px",
+              fontSize: "14px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -408,14 +400,14 @@ export default function Generation(): JSX.Element {
           <button
             onClick={() => nav("/app/profile")}
             style={{
-              height: "40px",
-              padding: "0 16px",
-              borderRadius: "8px",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
               border: "none",
-              background: "#6B46C1",
+              background: "#9333EA",
               color: "#fff",
               cursor: "pointer",
-              fontSize: "15px",
+              fontSize: "14px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -439,8 +431,8 @@ export default function Generation(): JSX.Element {
         <aside
           style={{
             width: "280px",
-            background: "#2D1B69",
-            borderRight: "1px solid #3A256A",
+            background: "#121212",
+            borderRight: "1px solid #374151",
             padding: "24px",
             boxSizing: "border-box",
             display: "flex",
@@ -452,7 +444,7 @@ export default function Generation(): JSX.Element {
           <div
             style={{
               fontSize: "14px",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#fff",
               marginBottom: "16px",
               lineHeight: "20px",
@@ -461,7 +453,7 @@ export default function Generation(): JSX.Element {
             Generation Flow
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             {steps.map((s) => (
               <StepItem key={s.id} step={s} />
             ))}
@@ -471,9 +463,9 @@ export default function Generation(): JSX.Element {
             style={{
               marginTop: "24px",
               borderRadius: "8px",
-              border: "1px solid #3A256A",
-              background: "#3A256A",
-              padding: "12px",
+              border: "1px solid #374151",
+              background: "#1F2937",
+              padding: "16px",
               display: "flex",
               flexDirection: "column",
               gap: "8px",
@@ -482,7 +474,7 @@ export default function Generation(): JSX.Element {
             <div
               style={{
                 fontSize: "14px",
-                fontWeight: 700,
+                fontWeight: 600,
                 color: "#fff",
                 lineHeight: "20px",
               }}
@@ -494,7 +486,7 @@ export default function Generation(): JSX.Element {
                 margin: 0,
                 fontSize: "12px",
                 lineHeight: "1.7",
-                color: "#B8A9E0",
+                color: "#9CA3AF",
               }}
             >
               Select how you want to create or choose the model for your virtual try-on
@@ -504,12 +496,12 @@ export default function Generation(): JSX.Element {
           </div>
         </aside>
 
-        {/* MAIN CONTENT — scrollable */}
+        {/* MAIN CONTENT */}
         <main
           style={{
             flex: 1,
-            background: "linear-gradient(135deg, #1E0F3B 0%, #2D1B69 100%)",
-            padding: "40px 32px",
+            background: "linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)",
+            padding: "32px",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
@@ -522,7 +514,7 @@ export default function Generation(): JSX.Element {
               maxWidth: "1100px",
               display: "flex",
               flexDirection: "column",
-              gap: "36px",
+              gap: "32px",
             }}
           >
             {/* Title Section */}
@@ -542,7 +534,7 @@ export default function Generation(): JSX.Element {
                 style={{
                   margin: 0,
                   fontSize: "15px",
-                  color: "#B8A9E0",
+                  color: "rgba(255,255,255,0.6)",
                   lineHeight: "1.5",
                 }}
               >
@@ -555,7 +547,7 @@ export default function Generation(): JSX.Element {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "28px",
+                gap: "24px",
               }}
             >
               {cards.map((c) => (
@@ -578,43 +570,43 @@ export default function Generation(): JSX.Element {
                 disabled={!selected}
                 onClick={handleContinue}
                 style={{
-                  height: "52px",
-                  padding: "14px 28px",
+                  height: "48px",
+                  padding: "0 28px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "10px",
-                  borderRadius: "12px",
+                  gap: "8px",
+                  borderRadius: "8px",
                   border: "none",
                   background: selected
-                    ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
-                    : "#3A256A",
+                    ? "linear-gradient(135deg, #9333EA, #A855F7)"
+                    : "#374151",
                   color: "#fff",
                   fontSize: "16px",
-                  fontWeight: 600,
+                  fontWeight: 500,
                   cursor: selected ? "pointer" : "not-allowed",
                   opacity: selected ? 1 : 0.5,
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transition: "all 0.3s ease",
                   whiteSpace: "nowrap",
-                  boxShadow: selected ? "0 4px 12px rgba(107, 70, 193, 0.4)" : "none",
+                  boxShadow: selected ? "0 4px 6px rgba(0,0,0,0.1)" : "none",
                 }}
                 onMouseEnter={(e) => {
                   if (selected) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #7C5CFA, #8B5CF6)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(107, 70, 193, 0.5)";
-                    e.currentTarget.style.transform = "scale(1.02)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, #A855F7, #C084FC)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.4)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selected) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #6B46C1, #8B5CF6)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(107, 70, 193, 0.4)";
-                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, #9333EA, #A855F7)";
+                    e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.transform = "translateY(0)";
                   }
                 }}
               >
                 Continue to Upload Garment
-                <span style={{ fontSize: "18px" }}>→</span>
+                <span>→</span>
               </button>
             </div>
           </div>
@@ -642,10 +634,10 @@ export default function Generation(): JSX.Element {
             style={{
               width: "520px",
               maxHeight: "90vh",
-              borderRadius: "20px",
-              background: "#1E0F3B",
-              border: "1px solid #3A256A",
-              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(139, 92, 246, 0.15)",
+              borderRadius: "12px",
+              background: "#1A1A2E",
+              border: "1px solid #374151",
+              boxShadow: "0 20px 25px rgba(0, 0, 0, 0.5)",
               padding: "32px",
               display: "flex",
               flexDirection: "column",
@@ -669,7 +661,7 @@ export default function Generation(): JSX.Element {
                   style={{
                     margin: "6px 0 0",
                     fontSize: "14px",
-                    color: "#B8A9E0",
+                    color: "#9CA3AF",
                   }}
                 >
                   Upload the garment you want to try on the model
@@ -678,14 +670,14 @@ export default function Generation(): JSX.Element {
               <button
                 onClick={() => setShowUploadModal(false)}
                 style={{
-                  width: "36px",
-                  height: "36px",
+                  width: "32px",
+                  height: "32px",
                   borderRadius: "8px",
-                  border: "1px solid #3A256A",
+                  border: "1px solid #374151",
                   background: "transparent",
-                  color: "rgba(255,255,255,0.6)",
+                  color: "#9CA3AF",
                   cursor: "pointer",
-                  fontSize: "18px",
+                  fontSize: "16px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -699,29 +691,29 @@ export default function Generation(): JSX.Element {
             <div
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: "2px dashed #3A256A",
-                borderRadius: "16px",
-                padding: garmentPreview ? "0" : "40px 24px",
-                background: garmentPreview ? "transparent" : "rgba(58, 37, 106, 0.3)",
+                border: "2px dashed #9333EA",
+                borderRadius: "8px",
+                padding: garmentPreview ? "0" : "32px",
+                background: garmentPreview ? "transparent" : "#2D1B69",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
-                minHeight: garmentPreview ? "200px" : "200px",
+                minHeight: "200px",
                 overflow: "hidden",
               }}
               onMouseEnter={(e) => {
                 if (!garmentPreview) {
-                  e.currentTarget.style.borderColor = "#8B5CF6";
-                  e.currentTarget.style.background = "rgba(139, 92, 246, 0.1)";
+                  e.currentTarget.style.borderColor = "#A855F7";
+                  e.currentTarget.style.background = "rgba(147, 51, 234, 0.15)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!garmentPreview) {
-                  e.currentTarget.style.borderColor = "#3A256A";
-                  e.currentTarget.style.background = "rgba(58, 37, 106, 0.3)";
+                  e.currentTarget.style.borderColor = "#9333EA";
+                  e.currentTarget.style.background = "#2D1B69";
                 }
               }}
             >
@@ -735,7 +727,7 @@ export default function Generation(): JSX.Element {
                       height: "200px",
                       objectFit: "contain",
                       display: "block",
-                      borderRadius: "14px",
+                      borderRadius: "6px",
                     }}
                   />
                   <div
@@ -747,7 +739,7 @@ export default function Generation(): JSX.Element {
                       borderRadius: "6px",
                       padding: "4px 8px",
                       fontSize: "12px",
-                      color: "#22c55e",
+                      color: "#10B981",
                       fontWeight: 600,
                     }}
                   >
@@ -760,7 +752,7 @@ export default function Generation(): JSX.Element {
                   <div style={{ fontSize: "16px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>
                     Click to upload garment
                   </div>
-                  <div style={{ fontSize: "13px", color: "#8B7AB8" }}>
+                  <div style={{ fontSize: "13px", color: "#9CA3AF" }}>
                     JPG, PNG or WEBP (max 10MB)
                   </div>
                 </>
@@ -782,9 +774,9 @@ export default function Generation(): JSX.Element {
                 onClick={() => fileInputRef.current?.click()}
                 style={{
                   background: "transparent",
-                  border: "1px solid #3A256A",
+                  border: "1px solid #374151",
                   borderRadius: "8px",
-                  color: "#B8A9E0",
+                  color: "#9CA3AF",
                   padding: "10px 16px",
                   cursor: "pointer",
                   fontSize: "13px",
@@ -803,20 +795,20 @@ export default function Generation(): JSX.Element {
                 style={{
                   height: "48px",
                   padding: "0 24px",
-                  borderRadius: "10px",
-                  border: "1px solid #3A256A",
-                  background: "transparent",
-                  color: "#B8A9E0",
+                  borderRadius: "8px",
+                  border: "1px solid #374151",
+                  background: "#374151",
+                  color: "#9CA3AF",
                   fontSize: "14px",
-                  fontWeight: 600,
+                  fontWeight: 500,
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(58, 37, 106, 0.5)";
+                  e.currentTarget.style.background = "#4B5563";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.background = "#374151";
                 }}
               >
                 Skip for Now
@@ -827,33 +819,32 @@ export default function Generation(): JSX.Element {
                 style={{
                   height: "48px",
                   padding: "0 28px",
-                  borderRadius: "10px",
+                  borderRadius: "8px",
                   border: "none",
                   background: garmentPreview
-                    ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
-                    : "#3A256A",
+                    ? "linear-gradient(135deg, #9333EA, #A855F7)"
+                    : "#374151",
                   color: "#fff",
                   fontSize: "14px",
-                  fontWeight: 600,
+                  fontWeight: 500,
                   cursor: garmentPreview ? "pointer" : "not-allowed",
                   opacity: garmentPreview ? 1 : 0.5,
                   transition: "all 0.3s ease",
-                  boxShadow: garmentPreview ? "0 4px 12px rgba(107, 70, 193, 0.4)" : "none",
+                  boxShadow: garmentPreview ? "0 4px 6px rgba(147, 51, 234, 0.3)" : "none",
                 }}
                 onMouseEnter={(e) => {
                   if (garmentPreview) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #7C5CFA, #8B5CF6)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(107, 70, 193, 0.5)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, #A855F7, #C084FC)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.4)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (garmentPreview) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #6B46C1, #8B5CF6)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(107, 70, 193, 0.4)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, #9333EA, #A855F7)";
+                    e.currentTarget.style.boxShadow = "0 4px 6px rgba(147, 51, 234, 0.3)";
                   }
                 }}
               >
-                
                 Upload & Continue →
               </button>
             </div>
