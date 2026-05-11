@@ -131,7 +131,7 @@ function ChoiceCard({
         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         cursor: "pointer",
         width: "100%",
-        height: "100%",
+        minHeight: "520px",
         outline: "none",
         overflow: "hidden",
         display: "flex",
@@ -151,15 +151,13 @@ function ChoiceCard({
         }
       }}
     >
+      {/* Image Area */}
       <div
         style={{
-          margin: "16px",
-          width: "calc(100% - 32px)",
-          height: "180px",
-          borderRadius: "12px",
+          width: "100%",
+          height: "280px",
           overflow: "hidden",
           flexShrink: 0,
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
         }}
       >
         <img
@@ -174,9 +172,10 @@ function ChoiceCard({
         />
       </div>
 
+      {/* Text Content */}
       <div
         style={{
-          padding: "0 20px 20px",
+          padding: "24px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -187,7 +186,7 @@ function ChoiceCard({
             fontSize: "20px",
             fontWeight: 600,
             color: "#fff",
-            margin: "0 0 8px 0",
+            margin: "0 0 10px 0",
           }}
         >
           {title}
@@ -195,9 +194,9 @@ function ChoiceCard({
 
         <p
           style={{
-            margin: "0 0 12px 0",
+            margin: "0 0 16px 0",
             fontSize: "14px",
-            lineHeight: "1.5",
+            lineHeight: "1.6",
             color: "#B8A9E0",
           }}
         >
@@ -210,13 +209,15 @@ function ChoiceCard({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
+            gap: "8px",
+            paddingTop: "12px",
+            borderTop: "1px solid #3A256A",
           }}
         >
-          <span style={{ fontSize: "14px" }}>{metaIcon}</span>
+          <span style={{ fontSize: "16px" }}>{metaIcon}</span>
           <span
             style={{
-              fontSize: "12px",
+              fontSize: "13px",
               fontWeight: 500,
               color: selected ? "#8B5CF6" : "#8B7AB8",
             }}
@@ -445,7 +446,7 @@ export default function Generation(): JSX.Element {
           </div>
         </aside>
 
-        {/* MAIN CONTENT */}
+        {/* MAIN CONTENT — scrollable */}
         <main
           style={{
             flex: 1,
@@ -460,11 +461,10 @@ export default function Generation(): JSX.Element {
           <div
             style={{
               width: "100%",
-              maxWidth: "900px",
+              maxWidth: "1100px",
               display: "flex",
               flexDirection: "column",
-              gap: "32px",
-              flex: 1,
+              gap: "36px",
             }}
           >
             {/* Title Section */}
@@ -472,10 +472,10 @@ export default function Generation(): JSX.Element {
               <h1
                 style={{
                   margin: "0 0 8px 0",
-                  fontSize: "24px",
+                  fontSize: "28px",
                   fontWeight: 700,
                   color: "#fff",
-                  lineHeight: "32px",
+                  lineHeight: "36px",
                 }}
               >
                 Choose Your Model
@@ -483,7 +483,7 @@ export default function Generation(): JSX.Element {
               <p
                 style={{
                   margin: 0,
-                  fontSize: "14px",
+                  fontSize: "15px",
                   color: "#B8A9E0",
                   lineHeight: "1.5",
                 }}
@@ -492,12 +492,12 @@ export default function Generation(): JSX.Element {
               </p>
             </div>
 
-            {/* Cards Grid */}
+            {/* Cards Grid — no fixed height, cards can be tall */}
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "24px",
+                gap: "28px",
               }}
             >
               {cards.map((c) => (
@@ -515,17 +515,17 @@ export default function Generation(): JSX.Element {
             </div>
 
             {/* Continue Button */}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", paddingBottom: "24px" }}>
               <button
                 disabled={!selected}
                 onClick={handleContinue}
                 style={{
-                  height: "48px",
-                  padding: "12px 24px",
+                  height: "52px",
+                  padding: "14px 28px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
+                  gap: "10px",
                   borderRadius: "12px",
                   border: "none",
                   background: selected
@@ -556,7 +556,7 @@ export default function Generation(): JSX.Element {
                 }}
               >
                 Continue to Upload Garment
-                <span style={{ fontSize: "16px" }}>→</span>
+                <span style={{ fontSize: "18px" }}>→</span>
               </button>
             </div>
           </div>
