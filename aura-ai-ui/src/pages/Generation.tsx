@@ -853,6 +853,7 @@ export default function Generation(): JSX.Element {
                   }
                 }}
               >
+                
                 Upload & Continue →
               </button>
             </div>
