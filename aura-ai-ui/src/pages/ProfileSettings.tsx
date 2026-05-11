@@ -15,16 +15,14 @@ export default function ProfileSettings(): JSX.Element {
   const nav = useNavigate();
   const [tab, setTab] = useState<Tab>("profile");
 
-  const [firstName, setFirstName] = useState("Sarah");
-  const [lastName, setLastName] = useState("Chen");
-  const [email, setEmail] = useState("sarah.chen@example.com");
-  const [bio, setBio] = useState(
-    "AI enthusiast and creative professional exploring the intersection of technology and design."
-  );
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
-  const [defaultModel, setDefaultModel] = useState("Aura Pro");
+  const [defaultModel, setDefaultModel] = useState("");
 
   const [history, setHistory] = useState<UsedModel[]>([]);
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -53,10 +51,16 @@ export default function ProfileSettings(): JSX.Element {
 
     loadHistory();
 
-    // Load saved avatar from localStorage
     const savedProfile = localStorage.getItem("aura_profile");
     if (savedProfile) {
       const profile = JSON.parse(savedProfile);
+      setFirstName(profile.firstName ?? "");
+      setLastName(profile.lastName ?? "");
+      setEmail(profile.email ?? "");
+      setBio(profile.bio ?? "");
+      setEmailNotifications(profile.emailNotifications ?? true);
+      setDarkMode(profile.darkMode ?? true);
+      setDefaultModel(profile.defaultModel ?? "");
       setAvatar(profile.avatar || null);
     }
   }, []);
@@ -148,12 +152,12 @@ export default function ProfileSettings(): JSX.Element {
             gap: 12,
           }}
         >
-          <Avatar size={34} src={avatar??undefined} />
+          <Avatar size={34} src={avatar ?? undefined} />
           <div>
             <div style={{ fontSize: 12, fontWeight: 700 }}>
-              {firstName} {lastName}
+              {firstName || lastName ? `${firstName} ${lastName}`.trim() : "New User"}
             </div>
-            <div style={{ fontSize: 10, opacity: 0.6 }}>Premium Plan</div>
+            <div style={{ fontSize: 10, opacity: 0.6 }}>Free Plan</div>
           </div>
         </div>
       </aside>
@@ -192,21 +196,22 @@ export default function ProfileSettings(): JSX.Element {
                 <Panel title="Personal Information">
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                     <Field label="First Name">
-                      <Input value={firstName} onChange={setFirstName} />
+                      <Input value={firstName} onChange={setFirstName} placeholder="Enter first name" />
                     </Field>
                     <Field label="Last Name">
-                      <Input value={lastName} onChange={setLastName} />
+                      <Input value={lastName} onChange={setLastName} placeholder="Enter last name" />
                     </Field>
                   </div>
 
                   <Field label="Email Address">
-                    <Input value={email} onChange={setEmail} />
+                    <Input value={email} onChange={setEmail} placeholder="Enter email address" />
                   </Field>
 
                   <Field label="Bio">
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell us about yourself..."
                       style={inputStyle({ height: 96, padding: "16px" })}
                     />
                   </Field>
@@ -228,7 +233,7 @@ export default function ProfileSettings(): JSX.Element {
                   />
 
                   <Field label="Default AI Model">
-                    <Input value={defaultModel} onChange={setDefaultModel} />
+                    <Input value={defaultModel} onChange={setDefaultModel} placeholder="Select default model" />
                   </Field>
                 </Panel>
 
@@ -241,11 +246,11 @@ export default function ProfileSettings(): JSX.Element {
               <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
                 <Panel>
                   <div style={{ textAlign: "center" }}>
-                    <Avatar size={86} src={avatar??undefined} />
+                    <Avatar size={86} src={avatar ?? undefined} />
                     <h3 style={{ margin: "16px 0 0" }}>
-                      {firstName} {lastName}
+                      {firstName || lastName ? `${firstName} ${lastName}`.trim() : "New User"}
                     </h3>
-                    <p style={{ margin: 0, color: "rgba(237,237,237,.65)" }}>Premium Member</p>
+                    <p style={{ margin: 0, color: "rgba(237,237,237,.65)" }}>Free Plan</p>
 
                     <div
                       style={{
@@ -256,7 +261,7 @@ export default function ProfileSettings(): JSX.Element {
                         fontSize: 13,
                       }}
                     >
-                      Member since March 2024
+                      Complete your profile to get started
                     </div>
 
                     <input
@@ -285,8 +290,8 @@ export default function ProfileSettings(): JSX.Element {
                 </Panel>
 
                 <Panel title="Usage Statistics">
-                  <Stat label="Generations Used" value="847 / 1000" percent={84} />
-                  <Stat label="Storage Used" value="2.4 / 10 GB" percent={24} />
+                  <Stat label="Generations Used" value="0 / 1000" percent={0} />
+                  <Stat label="Storage Used" value="0 / 10 GB" percent={0} />
                 </Panel>
               </div>
             </div>
@@ -402,11 +407,12 @@ function Field(props: { label: string; children: React.ReactNode }): JSX.Element
   );
 }
 
-function Input(props: { value: string; onChange: (value: string) => void }): JSX.Element {
+function Input(props: { value: string; onChange: (value: string) => void; placeholder?: string }): JSX.Element {
   return (
     <input
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
+      placeholder={props.placeholder ?? ""}
       style={inputStyle()}
     />
   );
