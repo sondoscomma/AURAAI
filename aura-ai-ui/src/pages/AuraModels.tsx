@@ -2,10 +2,19 @@ import type { JSX } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import laylaImg from "../assets/models/female-modern-1.png";
+import omarImg from "../assets/models/male-traditional-1.png";
+import amiraImg from "../assets/models/female-traditional-1.png";
+import karimImg from "../assets/models/male-modern-1.png";
+import nourImg from "../assets/models/female-modern-2.png";
+import fahadImg from "../assets/models/male-traditional-2.png";
+import saraImg from "../assets/models/female-modern-3.png";
+
 type Filter = "All Models" | "Female" | "Male" | "Traditional Wear" | "Modern Wear";
 
 type AuraModel = {
   name: string;
+  image: string;
   height: string;
   skin: string;
   rating: string;
@@ -25,6 +34,7 @@ const filters: Filter[] = [
 const models: AuraModel[] = [
   {
     name: "Layla Al-Fayed",
+    image: laylaImg,
     height: "5'8",
     skin: "Olive",
     rating: "4.9",
@@ -34,6 +44,7 @@ const models: AuraModel[] = [
   },
   {
     name: "Omar Khaled",
+    image: omarImg,
     height: "6'0",
     skin: "Tan",
     rating: "4.8",
@@ -43,6 +54,7 @@ const models: AuraModel[] = [
   },
   {
     name: "Amira Hassan",
+    image: amiraImg,
     height: "5'6",
     skin: "Fair",
     rating: "5.0",
@@ -52,6 +64,7 @@ const models: AuraModel[] = [
   },
   {
     name: "Karim Nassar",
+    image: karimImg,
     height: "6'1",
     skin: "Bronze",
     rating: "4.7",
@@ -61,6 +74,7 @@ const models: AuraModel[] = [
   },
   {
     name: "Nour Saad",
+    image: nourImg,
     height: "5'7",
     skin: "Warm",
     rating: "4.8",
@@ -70,6 +84,7 @@ const models: AuraModel[] = [
   },
   {
     name: "Fahad Alim",
+    image: fahadImg,
     height: "6'0",
     skin: "Tan",
     rating: "4.6",
@@ -79,6 +94,7 @@ const models: AuraModel[] = [
   },
   {
     name: "Sara Zayed",
+    image: saraImg,
     height: "5'5",
     skin: "Fair",
     rating: "4.9",
@@ -503,22 +519,24 @@ function ModelCard(props: {
         boxShadow: props.selected ? "0 0 0 4px rgba(198,166,247,0.18)" : "none",
       }}
     >
-      {/* image placeholder for now */}
+      {/* Model Image */}
       <div
         style={{
           height: 330,
           position: "relative",
-          background:
-            "linear-gradient(145deg, rgba(237,237,237,0.85), rgba(83,44,134,0.55))",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "rgba(22,22,22,0.5)",
-          fontSize: 16,
-          fontWeight: 700,
+          overflow: "hidden",
         }}
       >
-        Model Image
+        <img
+          src={props.model.image}
+          alt={props.model.name}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
 
         <div
           style={{
