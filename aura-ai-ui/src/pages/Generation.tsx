@@ -43,13 +43,13 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         display: "flex",
         alignItems: "center",
         gap: "12px",
-        borderRadius: "10px",
-        padding: "12px 14px",
-        border: isCurrent
-          ? "1px solid rgba(83,44,134,0.5)"
-          : "1px solid rgba(255,255,255,0.07)",
-        background: isCurrent ? "rgba(55,25,90,0.65)" : "rgba(255,255,255,0.02)",
+        borderRadius: "8px",
+        padding: "16px",
+        border: isCurrent ? "1px solid #6c3cff" : "1px solid #333",
+        background: isCurrent ? "#6c3cff" : "#1e1e1e",
+        boxShadow: isCurrent ? "0 2px 8px rgba(108, 60, 255, 0.3)" : "none",
         opacity: isNext ? 0.55 : isLater ? 0.3 : 1,
+        transition: "all 0.3s ease",
       }}
     >
       <div
@@ -61,8 +61,8 @@ function StepItem({ step }: { step: Step }): JSX.Element {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: isCurrent ? "#b89af5" : "rgba(255,255,255,0.1)",
-          color: isCurrent ? "#1a0033" : "rgba(255,255,255,0.5)",
+          background: isCurrent ? "#fff" : "#333",
+          color: isCurrent ? "#6c3cff" : "#888",
           fontSize: "12px",
           fontWeight: 700,
         }}
@@ -73,9 +73,9 @@ function StepItem({ step }: { step: Step }): JSX.Element {
       <div>
         <div
           style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: isCurrent ? "#fff" : "rgba(255,255,255,0.5)",
+            fontSize: "14px",
+            fontWeight: 700,
+            color: isCurrent ? "#fff" : "#888",
             lineHeight: "20px",
           }}
         >
@@ -83,9 +83,9 @@ function StepItem({ step }: { step: Step }): JSX.Element {
         </div>
         <div
           style={{
-            fontSize: "11px",
-            color: "rgba(255,255,255,0.32)",
-            marginTop: "1px",
+            fontSize: "12px",
+            color: isCurrent ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.32)",
+            marginTop: "2px",
           }}
         >
           {step.subtitle}
@@ -123,40 +123,43 @@ function ChoiceCard({
         textAlign: "left",
         borderRadius: "12px",
         padding: 0,
-        border: selected
-          ? "1.5px solid rgba(198,166,247,0.8)"
-          : "1px solid rgba(237,237,237,0.2)",
-        background: "#161616",
-        boxShadow: selected ? "0 0 0 3px rgba(198,166,247,0.15)" : "none",
-        transition: "border-color 0.15s, box-shadow 0.15s",
+        border: selected ? "1.5px solid #6c3cff" : "1px solid #333",
+        background: selected ? "#2a2a2a" : "#1e1e1e",
+        boxShadow: selected
+          ? "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(108, 60, 255, 0.15)"
+          : "none",
+        transition: "all 0.3s ease",
         cursor: "pointer",
         width: "100%",
-        height: "418px",
+        height: "100%",
         outline: "none",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        transform: selected ? "translateY(-2px)" : "none",
       }}
       onMouseEnter={(e) => {
-        if (!selected) e.currentTarget.style.borderColor = "rgba(237,237,237,0.35)";
+        if (!selected) {
+          e.currentTarget.style.background = "#2a2a2a";
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
+        }
       }}
       onMouseLeave={(e) => {
-        if (!selected) e.currentTarget.style.borderColor = "rgba(237,237,237,0.2)";
+        if (!selected) {
+          e.currentTarget.style.background = "#1e1e1e";
+          e.currentTarget.style.transform = "none";
+          e.currentTarget.style.boxShadow = "none";
+        }
       }}
     >
       <div
         style={{
-          position: "relative",
-          marginTop: "25px",
-          marginLeft: "25px",
-          marginRight: "25px",
-          width: "calc(100% - 50px)",
-          height: "192px",
-          borderRadius: "8px",
+          width: "100%",
+          height: "180px",
           overflow: "hidden",
           flexShrink: 0,
-          background:
-            "linear-gradient(135deg, rgba(83,44,134,0.2), rgba(198,166,247,0.2))",
+          borderBottom: "1px solid #333",
         }}
       >
         <img
@@ -173,7 +176,7 @@ function ChoiceCard({
 
       <div
         style={{
-          padding: "16px 20px",
+          padding: "16px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -181,11 +184,10 @@ function ChoiceCard({
       >
         <div
           style={{
-            fontFamily: "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
             fontSize: "18px",
-            fontWeight: 600,
-            lineHeight: "28px",
+            fontWeight: 700,
             color: "#fff",
+            margin: "0 0 8px 0",
           }}
         >
           {title}
@@ -193,10 +195,10 @@ function ChoiceCard({
 
         <p
           style={{
-            margin: "8px 0 0",
-            fontSize: "12.5px",
-            lineHeight: "1.6",
-            color: "rgba(255,255,255,0.52)",
+            margin: "0 0 12px 0",
+            fontSize: "14px",
+            lineHeight: "1.5",
+            color: "#aaa",
           }}
         >
           {desc}
@@ -209,15 +211,14 @@ function ChoiceCard({
             display: "flex",
             alignItems: "center",
             gap: "6px",
-            marginTop: "12px",
           }}
         >
-          <span style={{ fontSize: "13px" }}>{metaIcon}</span>
+          <span style={{ fontSize: "14px" }}>{metaIcon}</span>
           <span
             style={{
               fontSize: "12px",
               fontWeight: 500,
-              color: selected ? "#c6a6f7" : "rgba(198,166,247,0.75)",
+              color: selected ? "#C6A6F7" : "#888",
             }}
           >
             {meta}
@@ -283,20 +284,21 @@ export default function Generation(): JSX.Element {
         height: "100vh",
         background: "#0d0d0d",
         color: "#fff",
-        fontFamily: "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+        fontFamily: "'Inter', 'Bricolage Grotesque', system-ui, sans-serif",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
         zIndex: 9999,
       }}
     >
+      {/* HEADER */}
       <header
         style={{
           width: "100%",
-          height: "65px",
+          height: "64px",
           flexShrink: 0,
-          background: "#161616",
-          borderBottom: "1px solid rgba(83,44,134,0.2)",
+          background: "#1a0b3e",
+          borderBottom: "1px solid #2a1a4e",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -310,7 +312,7 @@ export default function Generation(): JSX.Element {
               width: "36px",
               height: "36px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #532C86, #7c3aed)",
+              background: "linear-gradient(135deg, #6c3cff, #532C86)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -328,10 +330,10 @@ export default function Generation(): JSX.Element {
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button
             style={{
-              width: "34px",
-              height: "34px",
+              width: "36px",
+              height: "36px",
               borderRadius: "50%",
-              border: "1px solid rgba(255,255,255,0.15)",
+              border: "1px solid #2a1a4e",
               background: "transparent",
               color: "rgba(255,255,255,0.7)",
               cursor: "pointer",
@@ -343,250 +345,216 @@ export default function Generation(): JSX.Element {
           >
             ?
           </button>
-     <button
-  onClick={() => nav("/app/profile")}
-  style={{
-    width: "34px",
-    height: "34px",
-    borderRadius: "50%",
-    border: "none",
-    background: "linear-gradient(135deg, #532C86, #7c3aed)",
-    color: "#fff",
-    cursor: "pointer",
-    fontSize: "15px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  👤
-</button>
+          <button
+            onClick={() => nav("/app/profile")}
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              border: "none",
+              background: "linear-gradient(135deg, #6c3cff, #532C86)",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "15px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            👤
+          </button>
         </div>
       </header>
 
+      {/* BODY */}
       <div
         style={{
           flex: 1,
           display: "flex",
           minHeight: 0,
           overflow: "hidden",
-          background: "#0d0d0d",
-          padding: "0 40px",
-          boxSizing: "border-box",
         }}
       >
-        <div
+        {/* SIDEBAR */}
+        <aside
           style={{
-            flex: 1,
-            display: "grid",
-            gridTemplateColumns: "320px 1fr",
-            minHeight: 0,
-            overflow: "hidden",
-            width: "100%",
+            width: "280px",
+            background: "#1a1a1a",
+            borderRight: "1px solid #2a2a2a",
+            padding: "24px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "auto",
+            flexShrink: 0,
           }}
         >
-          <aside
+          <div
             style={{
-              width: "320px",
-              background: "#161616",
-              borderRight: "1px solid rgba(83,44,134,0.2)",
-              padding: "24px",
-              boxSizing: "border-box",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "#fff",
+              marginBottom: "16px",
+              lineHeight: "20px",
+            }}
+          >
+            Generation Flow
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {steps.map((s) => (
+              <StepItem key={s.id} step={s} />
+            ))}
+          </div>
+
+          <div
+            style={{
+              marginTop: "24px",
+              borderRadius: "8px",
+              border: "1px solid #333",
+              background: "#1e1e1e",
+              padding: "16px",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
+              gap: "8px",
             }}
           >
             <div
               style={{
                 fontSize: "14px",
                 fontWeight: 700,
-                color: "rgba(255,255,255,0.85)",
-                marginBottom: "16px",
-                lineHeight: "28px",
+                color: "#fff",
+                lineHeight: "20px",
               }}
             >
-              Generation Flow
+              Instructions
             </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {steps.map((s) => (
-                <StepItem key={s.id} step={s} />
-              ))}
-            </div>
-
-            <div
+            <p
               style={{
-                marginTop: "24px",
-                borderRadius: "8px",
-                border: "1px solid rgba(83,44,134,0.2)",
-                background: "rgba(83,44,134,0.1)",
-                padding: "16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
+                margin: 0,
+                fontSize: "12px",
+                lineHeight: "1.7",
+                color: "#888",
               }}
             >
-              <div
+              Select how you want to create or choose the model for your virtual try-on
+              experience. You can upload your own photo, generate an AI model, or choose
+              from our curated collection.
+            </p>
+          </div>
+        </aside>
+
+        {/* MAIN CONTENT */}
+        <main
+          style={{
+            flex: 1,
+            background: "linear-gradient(135deg, #2d1b69 0%, #1a0b3e 100%)",
+            padding: "32px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "auto",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "900px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "32px",
+              flex: 1,
+            }}
+          >
+            {/* Title Section */}
+            <div>
+              <h1
                 style={{
-                  fontSize: "14px",
+                  margin: "0 0 8px 0",
+                  fontSize: "24px",
                   fontWeight: 700,
                   color: "#fff",
-                  lineHeight: "20px",
+                  lineHeight: "32px",
                 }}
               >
-                Instructions
-              </div>
+                Choose Your Model
+              </h1>
               <p
                 style={{
                   margin: 0,
-                  fontSize: "12px",
-                  lineHeight: "1.7",
-                  color: "rgba(255,255,255,0.5)",
+                  fontSize: "14px",
+                  color: "#aaa",
+                  lineHeight: "1.5",
                 }}
               >
-                Select how you want to create or choose the model for your virtual try-on
-                experience. You can upload your own photo, generate an AI model, or choose
-                from our curated collection.
+                Select how you want to create or choose the model for your virtual try-on experience.
               </p>
             </div>
-          </aside>
 
-          <main
-            style={{
-              background: "linear-gradient(155deg, #2e1655 0%, #1c0a40 48%, #26114e 100%)",
-              padding: "32px",
-              boxSizing: "border-box",
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
-            }}
-          >
+            {/* Cards Grid */}
             <div
               style={{
-                width: "100%",
-                maxWidth: "896px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "32px",
-                flex: 1,
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "24px",
               }}
             >
-              <div
+              {cards.map((c) => (
+                <ChoiceCard
+                  key={c.id}
+                  image={c.image}
+                  title={c.title}
+                  desc={c.desc}
+                  meta={c.meta}
+                  metaIcon={c.metaIcon}
+                  selected={selected === c.id}
+                  onSelect={() => setSelected(c.id)}
+                />
+              ))}
+            </div>
+
+            {/* Continue Button */}
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                disabled={!selected}
+                onClick={handleContinue}
                 style={{
+                  height: "48px",
+                  padding: "12px 24px",
                   display: "flex",
                   alignItems: "center",
-                  gap: "16px",
-                  height: "56px",
+                  justifyContent: "center",
+                  gap: "8px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: selected ? "#6c3cff" : "#333",
+                  color: "#fff",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  cursor: selected ? "pointer" : "not-allowed",
+                  opacity: selected ? 1 : 0.5,
+                  transition: "all 0.3s ease",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  if (selected) {
+                    e.currentTarget.style.background = "#5a2ecc";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(108, 60, 255, 0.4)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selected) {
+                    e.currentTarget.style.background = "#6c3cff";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
                 }}
               >
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "10px",
-                    background: "rgba(83,44,134,0.35)",
-                    border: "1px solid rgba(83,44,134,0.4)",
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "18px",
-                  }}
-                >
-                  👤
-                </div>
-
-                <div>
-                  <h1
-                    style={{
-                      margin: 0,
-                      fontFamily:
-                        "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
-                      fontSize: "22px",
-                      fontWeight: 700,
-                      color: "#fff",
-                      lineHeight: "28px",
-                    }}
-                  >
-                    Choose Your Model
-                  </h1>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "13px",
-                      color: "rgba(255,255,255,0.52)",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    Select how you want to create or choose the model for your virtual
-                    try-on experience.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "24px",
-                  height: "418px",
-                }}
-              >
-                {cards.map((c) => (
-                  <ChoiceCard
-                    key={c.id}
-                    image={c.image}
-                    title={c.title}
-                    desc={c.desc}
-                    meta={c.meta}
-                    metaIcon={c.metaIcon}
-                    selected={selected === c.id}
-                    onSelect={() => setSelected(c.id)}
-                  />
-                ))}
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  disabled={!selected}
-                  onClick={handleContinue}
-                  style={{
-                    height: "48px",
-                    padding: "12px 32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "linear-gradient(135deg, #C6A6F7, #532C86)",
-                    color: "#fff",
-                    fontFamily:
-                      "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
-                    fontSize: "18px",
-                    fontWeight: 600,
-                    lineHeight: "28px",
-                    letterSpacing: "0px",
-                    cursor: selected ? "pointer" : "not-allowed",
-                    opacity: selected ? 1 : 0.5,
-                    transition: "opacity 0.18s",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selected) e.currentTarget.style.opacity = "0.88";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = selected ? "1" : "0.5";
-                  }}
-                >
-                  Continue to Upload Garment
-                  <span style={{ fontSize: "18px" }}>→</span>
-                </button>
-              </div>
+                Continue to Upload Garment
+                <span style={{ fontSize: "16px" }}>→</span>
+              </button>
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
