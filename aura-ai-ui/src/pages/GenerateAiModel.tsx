@@ -3,6 +3,7 @@ import { useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
+import SafeImage from "../components/SafeImage";
 
 // Brand Colors
 const COLORS = {
@@ -204,7 +205,10 @@ export default function GenerateAiModel(): JSX.Element {
       });
       const frontData = await frontRes.json();
       if (!frontRes.ok) throw new Error(frontData.message || "Front view generation failed");
-      const frontImageUrl = `data:${frontData.mimeType};base64,${frontData.imageBase64}`;
+      if (!frontData.imageBase64 || typeof frontData.imageBase64 !== "string" || frontData.imageBase64.length < 100) {
+        throw new Error("Received invalid image data from server for front view");
+      }
+      const frontImageUrl = `data:${frontData.mimeType || "image/png"};base64,${frontData.imageBase64}`;
       setFrontImage(frontImageUrl);
       setGeneratedImage(frontImageUrl);
 
@@ -225,7 +229,10 @@ export default function GenerateAiModel(): JSX.Element {
       });
       const rightData = await rightRes.json();
       if (!rightRes.ok) throw new Error(rightData.message || "Right view generation failed");
-      const rightImageUrl = `data:${rightData.mimeType};base64,${rightData.imageBase64}`;
+      if (!rightData.imageBase64 || typeof rightData.imageBase64 !== "string" || rightData.imageBase64.length < 100) {
+        throw new Error("Received invalid image data from server for right view");
+      }
+      const rightImageUrl = `data:${rightData.mimeType || "image/png"};base64,${rightData.imageBase64}`;
       setRightImage(rightImageUrl);
 
       setShowResultButton(true);
@@ -667,9 +674,10 @@ export default function GenerateAiModel(): JSX.Element {
               >
                 {generatedImage ? (
                   <>
-                    <img
+                    <SafeImage
                       src={generatedImage}
                       alt="Generated AI Model"
+                      fallbackIcon="🪄"
                       style={{
                         width: "100%",
                         height: "100%",
@@ -820,9 +828,10 @@ export default function GenerateAiModel(): JSX.Element {
                           </div>
                           {garmentPreview ? (
                             <div style={{ position: "relative", display: "inline-block" }}>
-                              <img
+                              <SafeImage
                                 src={garmentPreview}
                                 alt="Uploaded garment"
+                                fallbackIcon="👕"
                                 style={{
                                   width: "120px",
                                   height: "120px",

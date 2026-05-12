@@ -11,6 +11,7 @@ import fahadImg from "../assets/models/male-traditional-2.png";
 import saraImg from "../assets/models/female-modern-3.png";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
+import SafeImage from "../components/SafeImage";
 
 type Filter = "All Models" | "Female" | "Male" | "Traditional Wear" | "Modern Wear";
 
@@ -168,26 +169,35 @@ export default function AuraModels(): JSX.Element {
     setGarmentPreview(null);
   };
 
-  // Convert image URL to Blob for FormData upload
-  const imageURLtoBlob = (url: string): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { reject(new Error("Canvas context failed")); return; }
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error("Blob conversion failed"));
-        }, "image/png");
-      };
-      img.onerror = () => reject(new Error("Image load failed"));
-      img.src = url;
-    });
+  // Convert image URL to Blob using fetch (more reliable than canvas for local/Vite assets)
+  const imageURLtoBlob = async (url: string): Promise<Blob> => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+      const blob = await response.blob();
+      if (blob.size === 0) throw new Error("Empty blob");
+      return blob;
+    } catch {
+      // Fallback: use canvas approach if fetch fails (e.g. data URLs)
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { reject(new Error("Canvas context failed")); return; }
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Blob conversion failed"));
+          }, "image/png");
+        };
+        img.onerror = () => reject(new Error("Image load failed"));
+        img.src = url;
+      });
+    }
   };
 
   const handleGenerate = async (): Promise<void> => {
@@ -224,17 +234,27 @@ export default function AuraModels(): JSX.Element {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Generation failed");
-        return `data:${data.mimeType};base64,${data.imageBase64}`;
+
+        // Validate base64 data before constructing data URL
+        if (!data.imageBase64 || typeof data.imageBase64 !== "string" || data.imageBase64.length < 100) {
+          throw new Error("Received invalid image data from server");
+        }
+
+        const mimeType = data.mimeType || "image/png";
+        return `data:${mimeType};base64,${data.imageBase64}`;
       };
 
       // Build prompt context from model attributes
       const basePrompt = `Create a realistic virtual try-on image. Dress the ${model.gender.toLowerCase()} person with the uploaded clothing. Professional ${model.tags.join(", ").toLowerCase()} style, ${model.height} tall, ${model.skin.toLowerCase()} skin, photorealistic, studio lighting, full body shot`;
 
-      // Generate both views in parallel
-      const [frontImageUrl, rightImageUrl] = await Promise.all([
-        generateView(`${basePrompt}, front view facing camera`),
-        generateView(`${basePrompt}, right side profile view, turned 90 degrees to the right`),
-      ]);
+      // Generate both views sequentially to avoid API overload/corruption
+      const frontImageUrl = await generateView(`${basePrompt}, front view facing camera`);
+      const rightImageUrl = await generateView(`${basePrompt}, right side profile view, turned 90 degrees to the right`);
+
+      // Validate both images were generated successfully
+      if (!frontImageUrl || !rightImageUrl) {
+        throw new Error("One or both views failed to generate");
+      }
 
       // Navigate to AURA Model result page with both images
       nav("/app/generation-result-model", {
@@ -505,9 +525,10 @@ export default function AuraModels(): JSX.Element {
               {garmentPreview ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                   <div style={{ position: "relative", display: "inline-block" }}>
-                    <img
+                    <SafeImage
                       src={garmentPreview}
                       alt="Uploaded garment"
+                      fallbackIcon="👕"
                       style={{
                         width: 140,
                         height: 140,
@@ -693,9 +714,10 @@ function ModelCard(props: {
           boxSizing: "border-box",
         }}
       >
-        <img
+        <SafeImage
           src={props.model.image}
           alt={props.model.name}
+          fallbackIcon="👤"
           style={{
             maxWidth: "100%",
             maxHeight: "100%",

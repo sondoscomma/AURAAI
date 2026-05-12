@@ -3,6 +3,7 @@ import { useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
+import SafeImage from "../components/SafeImage";
 
 /** Convert a File to a base64 data-URL string */
 function fileToBase64(file: File): Promise<string> {
@@ -406,9 +407,10 @@ export default function UploadGarment(): JSX.Element {
                         e.currentTarget.style.transform = "translateY(0)";
                       }}
                     >
-                      <img
+                      <SafeImage
                         src={src}
                         alt={`Garment ${index + 1}`}
+                        fallbackIcon="👕"
                         style={{
                           width: "100%",
                           height: "180px",

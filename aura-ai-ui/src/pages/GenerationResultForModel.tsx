@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import { getUser } from "../components/localAuth";
+import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 
 // ─── Brand constants ───
 const COLORS = {
@@ -66,11 +67,15 @@ export default function GenerationResultForModel(): JSX.Element {
   const modelPreview = state?.modelPreview || null;
   const garmentPreview = state?.garmentPreview || null;
 
+  // Validate generated images (must be data URLs from API)
+  const validFrontImage = isValidBase64Image(frontImage) ? frontImage : null;
+  const validRightImage = isValidBase64Image(rightImage) ? rightImage : null;
+
   // The "main" generated image (used for saves/downloads)
-  const generatedImage = frontImage;
+  const generatedImage = validFrontImage;
 
   // Get correct image for active direction
-  const activeImage = activeDirection === "front" ? frontImage : rightImage;
+  const activeImage = activeDirection === "front" ? validFrontImage : validRightImage;
 
   // Get current user for scoped storage
   const currentUser = getUser();
@@ -168,7 +173,7 @@ export default function GenerationResultForModel(): JSX.Element {
   };
 
   const handleDownloadAll = (): void => {
-    [frontImage, rightImage].forEach((img, i) => {
+    [validFrontImage, validRightImage].forEach((img, i) => {
       if (!img) return;
       const link = document.createElement("a");
       link.href = img;
@@ -503,8 +508,8 @@ export default function GenerationResultForModel(): JSX.Element {
                   {DIRECTIONS.find((d) => d.id === activeDirection)?.label}
                 </div>
 
-                <img
-                  src={activeImage || generatedImage || undefined}
+                <SafeImage
+                  src={activeImage || generatedImage}
                   alt={`${modelName} - ${activeDirection} view`}
                   style={{
                     maxWidth: "100%",
@@ -624,7 +629,7 @@ export default function GenerationResultForModel(): JSX.Element {
                           gap: 8,
                         }}
                       >
-                        <img
+                        <SafeImage
                           src={modelPreview}
                           alt={modelName}
                           style={{
@@ -634,6 +639,7 @@ export default function GenerationResultForModel(): JSX.Element {
                             borderRadius: 8,
                             background: "rgba(22,22,22,0.5)",
                           }}
+                          fallbackIcon={"\u{1F464}"}
                         />
                         <span
                           style={{
@@ -659,7 +665,7 @@ export default function GenerationResultForModel(): JSX.Element {
                           gap: 8,
                         }}
                       >
-                        <img
+                        <SafeImage
                           src={garmentPreview}
                           alt="Uploaded garment"
                           style={{
@@ -669,6 +675,7 @@ export default function GenerationResultForModel(): JSX.Element {
                             borderRadius: 8,
                             background: "rgba(22,22,22,0.5)",
                           }}
+                          fallbackIcon={"\u{1F455}"}
                         />
                         <span
                           style={{
@@ -786,7 +793,7 @@ export default function GenerationResultForModel(): JSX.Element {
                     }}
                   >
                     {DIRECTIONS.map((dir) => {
-                      const dirImg = dir.id === "front" ? frontImage : rightImage;
+                      const dirImg = dir.id === "front" ? validFrontImage : validRightImage;
                       return (
                         <button
                           key={dir.id}
@@ -810,18 +817,17 @@ export default function GenerationResultForModel(): JSX.Element {
                             gap: 6,
                           }}
                         >
-                          {dirImg && (
-                            <img
-                              src={dirImg}
-                              alt={dir.label}
-                              style={{
-                                width: "100%",
-                                height: 90,
-                                objectFit: "cover",
-                                borderRadius: 6,
-                              }}
-                            />
-                          )}
+                          <SafeImage
+                            src={dirImg}
+                            alt={dir.label}
+                            style={{
+                              width: "100%",
+                              height: 90,
+                              objectFit: "cover",
+                              borderRadius: 6,
+                            }}
+                            fallbackIcon={dir.icon}
+                          />
                           <span
                             style={{
                               fontSize: 11,

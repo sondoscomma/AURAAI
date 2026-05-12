@@ -3,6 +3,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
+import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 
 const API_URL = "https://auraai-backend-6a8n.onrender.com";
 
@@ -25,7 +26,6 @@ export default function UploadYourModel(): JSX.Element {
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [rightImage, setRightImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [, setGeneratingView] = useState<"" | "front" | "right" | "both">("");
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
 
@@ -162,7 +162,13 @@ export default function UploadYourModel(): JSX.Element {
       throw new Error(data.message || `${viewLabel} view generation failed.`);
     }
 
-    return `data:${data.mimeType};base64,${data.imageBase64}`;
+    // Validate base64 data before constructing data URL
+    if (!data.imageBase64 || typeof data.imageBase64 !== "string" || data.imageBase64.length < 100) {
+      throw new Error(`Received invalid image data from server for ${viewLabel} view`);
+    }
+
+    const mimeType = data.mimeType || "image/png";
+    return `data:${mimeType};base64,${data.imageBase64}`;
   }
 
   // ─── Generate both views ───
@@ -185,13 +191,13 @@ export default function UploadYourModel(): JSX.Element {
       const rightPrompt =
         "Create a realistic virtual try-on image showing the RIGHT SIDE profile view. Use the person from the uploaded images and dress them with the clothing from the reference images. The model must face to the right, showing the right side profile of the outfit. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
-      // Generate both views in parallel
-      setGeneratingView("both");
+      // Generate views sequentially to avoid API overload/corruption
+      const front = await generateView(frontPrompt, "front");
+      const right = await generateView(rightPrompt, "right");
 
-      const [front, right] = await Promise.all([
-        generateView(frontPrompt, "front"),
-        generateView(rightPrompt, "right"),
-      ]);
+      if (!isValidBase64Image(front) || !isValidBase64Image(right)) {
+        throw new Error("Generated image data is invalid or corrupted");
+      }
 
       setFrontImage(front);
       setRightImage(right);
@@ -200,7 +206,6 @@ export default function UploadYourModel(): JSX.Element {
       setError(err instanceof Error ? err.message : "Try-on generation failed.");
     } finally {
       setIsGenerating(false);
-      setGeneratingView("");
     }
   }
 
@@ -427,7 +432,7 @@ export default function UploadYourModel(): JSX.Element {
                 >
                   {personPreview ? (
                     <div style={{ width: "100%", position: "relative" }}>
-                      <img
+                      <SafeImage
                         src={personPreview}
                         alt="Person preview"
                         style={{
@@ -436,6 +441,7 @@ export default function UploadYourModel(): JSX.Element {
                           objectFit: "contain",
                           borderRadius: "10px",
                         }}
+                        fallbackIcon="👤"
                       />
                       <button
                         onClick={(e) => {
@@ -601,7 +607,7 @@ export default function UploadYourModel(): JSX.Element {
                 >
                   {garmentPreview ? (
                     <div style={{ width: "100%", position: "relative" }}>
-                      <img
+                      <SafeImage
                         src={garmentPreview}
                         alt="Garment preview"
                         style={{
@@ -610,6 +616,7 @@ export default function UploadYourModel(): JSX.Element {
                           objectFit: "contain",
                           borderRadius: "10px",
                         }}
+                        fallbackIcon="👕"
                       />
                       <button
                         onClick={(e) => {
@@ -700,7 +707,7 @@ export default function UploadYourModel(): JSX.Element {
                 marginBottom: "16px",
               }}
             >
-              Generates 2 views: FRONT view and RIGHT SIDE profile view. Both images will be generated in parallel.
+              Generates 2 views: FRONT view and RIGHT SIDE profile view. Both images will be generated sequentially for reliability.
             </div>
 
             {error && (
@@ -794,7 +801,7 @@ export default function UploadYourModel(): JSX.Element {
                     }}
                   >
                     {frontImage ? (
-                      <img
+                      <SafeImage
                         src={frontImage}
                         alt="Front view try-on"
                         style={{
@@ -802,6 +809,7 @@ export default function UploadYourModel(): JSX.Element {
                           maxHeight: "350px",
                           objectFit: "contain",
                         }}
+                        fallbackIcon="Front"
                       />
                     ) : (
                       <div style={{ color: "rgba(237,237,237,0.4)", fontSize: "13px" }}>
@@ -842,7 +850,7 @@ export default function UploadYourModel(): JSX.Element {
                     }}
                   >
                     {rightImage ? (
-                      <img
+                      <SafeImage
                         src={rightImage}
                         alt="Right side view try-on"
                         style={{
@@ -850,6 +858,7 @@ export default function UploadYourModel(): JSX.Element {
                           maxHeight: "350px",
                           objectFit: "contain",
                         }}
+                        fallbackIcon="Right"
                       />
                     ) : (
                       <div style={{ color: "rgba(237,237,237,0.4)", fontSize: "13px" }}>

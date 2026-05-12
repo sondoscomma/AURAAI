@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import { getUser } from "../components/localAuth";
+import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 
 // ─── Brand constants ───
 const COLORS = {
@@ -60,6 +61,11 @@ export default function TryOnResult(): JSX.Element {
   const personPreview = state?.personPreview || null;
   const garmentPreview = state?.garmentPreview || null;
 
+  // Validate the result images
+  const validResultImage = isValidBase64Image(resultImage) ? resultImage : null;
+  const validFrontImage = state?.frontImage && isValidBase64Image(state.frontImage) ? state.frontImage : null;
+  const validRightImage = state?.rightImage && isValidBase64Image(state.rightImage) ? state.rightImage : null;
+
   // Get current user for scoped storage
   const currentUser = getUser();
   const userKey = currentUser
@@ -68,14 +74,14 @@ export default function TryOnResult(): JSX.Element {
 
   // ─── Save to user-scoped localStorage ───
   useEffect(() => {
-    if (resultImage && !savedToHistory) {
+    if (validResultImage && !savedToHistory) {
       try {
         const existing = localStorage.getItem(userKey);
         const history = existing ? JSON.parse(existing) : [];
 
         const newEntry = {
           id: Date.now().toString(),
-          image: resultImage,
+          image: validResultImage,
           method: "Virtual Try-On",
           title: "Virtual Try-On Result",
           createdAt: new Date().toISOString(),
@@ -89,11 +95,11 @@ export default function TryOnResult(): JSX.Element {
         // Silently fail
       }
     }
-  }, [resultImage, savedToHistory, userKey, currentUser]);
+  }, [validResultImage, savedToHistory, userKey, currentUser]);
 
   // ─── Save to backend for the logged-in user ───
   const saveToBackend = useCallback(async (): Promise<void> => {
-    if (!resultImage || backendSaveStatus === "success") return;
+    if (!validResultImage || backendSaveStatus === "success") return;
 
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -102,11 +108,11 @@ export default function TryOnResult(): JSX.Element {
       setSavingToBackend(true);
 
       // Extract base64 from data URL
-      const base64Match = resultImage.match(/^data:[^;]+;base64,(.+)$/);
+      const base64Match = validResultImage.match(/^data:[^;]+;base64,(.+)$/);
       if (!base64Match) return;
 
       const imageBase64 = base64Match[1];
-      const mimeType = resultImage.match(/^data:([^;]+);/)?.[1] || "image/png";
+      const mimeType = validResultImage.match(/^data:([^;]+);/)?.[1] || "image/png";
 
       const res = await fetch(`${API_URL}/api/models/save`, {
         method: "POST",
@@ -133,14 +139,14 @@ export default function TryOnResult(): JSX.Element {
     } finally {
       setSavingToBackend(false);
     }
-  }, [resultImage, backendSaveStatus]);
+  }, [validResultImage, backendSaveStatus]);
 
   // Auto-save to backend when image arrives
   useEffect(() => {
-    if (resultImage && backendSaveStatus === "idle") {
+    if (validResultImage && backendSaveStatus === "idle") {
       saveToBackend();
     }
-  }, [resultImage, backendSaveStatus, saveToBackend]);
+  }, [validResultImage, backendSaveStatus, saveToBackend]);
 
   // ─── Download helper ───
   const downloadImage = (imageUrl: string, filename: string): void => {
@@ -158,8 +164,8 @@ export default function TryOnResult(): JSX.Element {
   };
 
   const handleDownloadAll = (): void => {
-    const frontImg = state?.frontImage || resultImage;
-    const rightImg = state?.rightImage || resultImage;
+    const frontImg = validFrontImage || validResultImage;
+    const rightImg = validRightImage || validResultImage;
     if (frontImg) {
       downloadImage(frontImg, `aura-tryon-front-${Date.now()}.png`);
     }
@@ -173,8 +179,8 @@ export default function TryOnResult(): JSX.Element {
 
   // Get the correct image for the active direction
   const getActiveImage = (): string | null => {
-    const frontImg = state?.frontImage || resultImage;
-    const rightImg = state?.rightImage || resultImage;
+    const frontImg = validFrontImage || validResultImage;
+    const rightImg = validRightImage || validResultImage;
     return activeDirection === "front" ? frontImg : rightImg;
   };
 
@@ -497,7 +503,7 @@ export default function TryOnResult(): JSX.Element {
                   overflow: "hidden",
                 }}
               >
-                {resultImage ? (
+                {validResultImage ? (
                   <>
                     {/* Direction badge */}
                     <div
@@ -524,8 +530,8 @@ export default function TryOnResult(): JSX.Element {
                       }
                     </div>
 
-                    <img
-                      src={activeImage || resultImage || undefined}
+                    <SafeImage
+                      src={activeImage || validResultImage}
                       alt={`Virtual try-on result - ${activeDirection} view`}
                       style={{
                         maxWidth: "100%",
@@ -662,9 +668,10 @@ export default function TryOnResult(): JSX.Element {
                         }}
                       >
                         {personPreview ? (
-                          <img
+                          <SafeImage
                             src={personPreview}
                             alt="Person"
+                            fallbackIcon="👤"
                             style={{
                               width: "100%",
                               height: "100%",
@@ -710,9 +717,10 @@ export default function TryOnResult(): JSX.Element {
                         }}
                       >
                         {garmentPreview ? (
-                          <img
+                          <SafeImage
                             src={garmentPreview}
                             alt="Garment"
+                            fallbackIcon="👕"
                             style={{
                               width: "100%",
                               height: "100%",
@@ -827,8 +835,8 @@ export default function TryOnResult(): JSX.Element {
                   >
                     {DIRECTIONS.map((dir) => {
                       const dirImg = dir.id === "front"
-                        ? (state?.frontImage || resultImage)
-                        : (state?.rightImage || resultImage);
+                        ? (validFrontImage || validResultImage)
+                        : (validRightImage || validResultImage);
                       return (
                         <button
                           key={dir.id}
@@ -869,9 +877,10 @@ export default function TryOnResult(): JSX.Element {
                           }}
                         >
                           {dirImg && (
-                            <img
+                            <SafeImage
                               src={dirImg}
                               alt={dir.label}
+                              fallbackIcon={dir.icon}
                               style={{
                                 width: "100%",
                                 height: 80,
@@ -909,14 +918,14 @@ export default function TryOnResult(): JSX.Element {
                 >
                   <button
                     onClick={handleDownload}
-                    disabled={!resultImage}
+                    disabled={!validResultImage}
                     style={{
                       height: 48,
                       borderRadius: 10,
                       border: "1px solid rgba(198,166,247,0.3)",
                       background: "rgba(198,166,247,0.15)",
                       color: COLORS.platinum,
-                      cursor: resultImage ? "pointer" : "not-allowed",
+                      cursor: validResultImage ? "pointer" : "not-allowed",
                       fontSize: 14,
                       fontWeight: 600,
                       fontFamily: FONTS.primary,
@@ -925,17 +934,17 @@ export default function TryOnResult(): JSX.Element {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
-                      opacity: resultImage ? 1 : 0.45,
+                      opacity: validResultImage ? 1 : 0.45,
                     }}
                     onMouseEnter={(e) => {
-                      if (resultImage) {
+                      if (validResultImage) {
                         e.currentTarget.style.background =
                           "rgba(198,166,247,0.25)";
                         e.currentTarget.style.borderColor = COLORS.secondary;
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (resultImage) {
+                      if (validResultImage) {
                         e.currentTarget.style.background =
                           "rgba(198,166,247,0.15)";
                         e.currentTarget.style.borderColor =
@@ -948,14 +957,14 @@ export default function TryOnResult(): JSX.Element {
 
                   <button
                     onClick={handleDownloadAll}
-                    disabled={!resultImage}
+                    disabled={!validResultImage}
                     style={{
                       height: 48,
                       borderRadius: 10,
                       border: "none",
                       background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
                       color: "#fff",
-                      cursor: resultImage ? "pointer" : "not-allowed",
+                      cursor: validResultImage ? "pointer" : "not-allowed",
                       fontSize: 14,
                       fontWeight: 700,
                       fontFamily: FONTS.primary,
@@ -965,17 +974,17 @@ export default function TryOnResult(): JSX.Element {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
-                      opacity: resultImage ? 1 : 0.45,
+                      opacity: validResultImage ? 1 : 0.45,
                     }}
                     onMouseEnter={(e) => {
-                      if (resultImage) {
+                      if (validResultImage) {
                         e.currentTarget.style.boxShadow =
                           "0 12px 48px rgba(198,166,247,0.35)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (resultImage) {
+                      if (validResultImage) {
                         e.currentTarget.style.boxShadow =
                           "0 8px 32px rgba(198,166,247,0.25)";
                         e.currentTarget.style.transform = "translateY(0)";
