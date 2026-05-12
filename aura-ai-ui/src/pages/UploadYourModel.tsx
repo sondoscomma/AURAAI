@@ -25,7 +25,7 @@ export default function UploadYourModel(): JSX.Element {
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [rightImage, setRightImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingView, setGeneratingView] = useState<"" | "front" | "right" | "both">("");
+  const [, setGeneratingView] = useState<"" | "front" | "right" | "both">("");
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
 
