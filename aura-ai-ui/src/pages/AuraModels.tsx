@@ -9,6 +9,7 @@ import karimImg from "../assets/models/male-modern-1.png";
 import nourImg from "../assets/models/female-modern-2.png";
 import fahadImg from "../assets/models/male-traditional-2.png";
 import saraImg from "../assets/models/female-modern-3.png";
+import GenerationFlow from "../components/GenerationFlow";
 
 type Filter = "All Models" | "Female" | "Male" | "Traditional Wear" | "Modern Wear";
 
@@ -123,6 +124,14 @@ export default function AuraModels(): JSX.Element {
     });
   }, [activeFilter, search]);
 
+  const handleContinue = (): void => {
+    if (!selectedModel) return;
+    // After selecting a model, go to upload garment page
+    nav("/app/upload-garment", {
+      state: { selected: "aura", modelName: selectedModel },
+    });
+  };
+
   return (
     <div
       style={{
@@ -170,20 +179,23 @@ export default function AuraModels(): JSX.Element {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ opacity: 0.7 }}>?</span>
-          <div
+          <button
+            type="button"
+            onClick={() => nav("/app/profile")}
             style={{
               width: 34,
               height: 34,
               borderRadius: "50%",
+              border: "none",
               background: "linear-gradient(135deg,#532C86,#7c3aed)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              cursor: "pointer",
             }}
           >
             👤
-          </div>
+          </button>
         </div>
       </header>
 
@@ -191,68 +203,17 @@ export default function AuraModels(): JSX.Element {
       <div
         style={{
           flex: 1,
-          display: "grid",
-          gridTemplateColumns: "320px 1fr",
+          display: "flex",
           overflow: "hidden",
-          padding: "0 40px",
-          background: "#0d0d0d",
         }}
       >
-        {/* SIDEBAR */}
-        <aside
-          style={{
-            width: "320px",
-            background: "#161616",
-            borderRight: "1px solid rgba(83,44,134,0.2)",
-            padding: "32px 24px",
-            boxSizing: "border-box",
-            overflowY: "auto",
-          }}
-        >
-          <h3 style={{ margin: 0, fontSize: 17, lineHeight: "28px" }}>
-            Generation Flow
-          </h3>
-
-          <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 18 }}>
-            <Step active id={1} title="Choose Model" subtitle="Current step" />
-            <Step id={2} title="Upload Garment" subtitle="Next step" faded />
-            <Step id={3} title="Generate & Customize" subtitle="Coming up" faded />
-            <Step id={4} title="Results & Download" subtitle="Final step" faded />
-          </div>
-
-          <div
-            style={{
-              marginTop: 34,
-              borderRadius: 10,
-              border: "1px solid rgba(83,44,134,0.2)",
-              background: "rgba(83,44,134,0.1)",
-              padding: 20,
-            }}
-          >
-            <h4 style={{ margin: 0, fontSize: 16 }}>Instructions</h4>
-            <p
-              style={{
-                margin: "14px 0 0",
-                fontSize: 14,
-                lineHeight: "24px",
-                color: "rgba(237,237,237,0.62)",
-                fontFamily: "'General Sans', system-ui, sans-serif",
-              }}
-            >
-              Browse our curated collection of high-quality Arab 3D models. Select a
-              model that best fits your garment&apos;s style and target audience.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 28 }}>
-            <Metric label="TOTAL MODELS" value="124" />
-            <Metric label="NEW TODAY" value="8" />
-          </div>
-        </aside>
+        {/* SIDEBAR - Generation Flow with Step 3 glowing */}
+        <GenerationFlow activeStep={3} />
 
         {/* MAIN */}
         <main
           style={{
+            flex: 1,
             background: "linear-gradient(155deg,#2B144C 0%,#31145f 48%,#241044 100%)",
             padding: "42px 36px",
             overflowY: "auto",
@@ -294,6 +255,7 @@ export default function AuraModels(): JSX.Element {
 
               <button
                 type="button"
+                onClick={() => nav("/app/generation")}
                 style={{
                   height: 48,
                   borderRadius: 9,
@@ -305,7 +267,7 @@ export default function AuraModels(): JSX.Element {
                   cursor: "pointer",
                 }}
               >
-                ▼ Advanced Filters
+                ← Change Method
               </button>
             </div>
 
@@ -385,7 +347,7 @@ export default function AuraModels(): JSX.Element {
             {/* MODEL GRID */}
             <div
               style={{
-                marginTop: 68,
+                marginTop: 48,
                 display: "grid",
                 gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
                 gap: 28,
@@ -405,7 +367,7 @@ export default function AuraModels(): JSX.Element {
             <div style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
               <button
                 disabled={!selectedModel}
-                onClick={() => nav("/app/generate-ai-model", { state: { model: selectedModel } })}
+                onClick={handleContinue}
                 style={{
                   height: 48,
                   padding: "0 32px",
@@ -417,6 +379,17 @@ export default function AuraModels(): JSX.Element {
                   fontWeight: 700,
                   cursor: selectedModel ? "pointer" : "not-allowed",
                   opacity: selectedModel ? 1 : 0.5,
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedModel) {
+                    e.currentTarget.style.boxShadow = "0 6px 28px rgba(198,166,247,0.4)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
                 Continue with Selected Model →
@@ -425,73 +398,6 @@ export default function AuraModels(): JSX.Element {
           </div>
         </main>
       </div>
-    </div>
-  );
-}
-
-function Step(props: {
-  id: number;
-  title: string;
-  subtitle: string;
-  active?: boolean;
-  faded?: boolean;
-}): JSX.Element {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        borderRadius: 10,
-        padding: "17px 20px",
-        border: props.active
-          ? "1px solid rgba(198,166,247,0.45)"
-          : "1px solid rgba(237,237,237,0.07)",
-        background: props.active ? "rgba(83,44,134,0.28)" : "rgba(255,255,255,0.02)",
-        opacity: props.faded ? 0.35 : 1,
-      }}
-    >
-      <div
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: "50%",
-          background: props.active ? "#C6A6F7" : "rgba(237,237,237,0.1)",
-          color: props.active ? "#2B144C" : "rgba(237,237,237,0.7)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 700,
-        }}
-      >
-        {props.id}
-      </div>
-
-      <div>
-        <div style={{ fontSize: 16, color: props.active ? "#C6A6F7" : "#EDEDED" }}>
-          {props.title}
-        </div>
-        <div style={{ fontSize: 13, color: "rgba(237,237,237,0.5)" }}>
-          {props.subtitle}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Metric(props: { label: string; value: string }): JSX.Element {
-  return (
-    <div
-      style={{
-        borderRadius: 7,
-        background: "rgba(83,44,134,0.75)",
-        padding: "13px 15px",
-      }}
-    >
-      <div style={{ fontSize: 10, color: "rgba(237,237,237,0.55)" }}>
-        {props.label}
-      </div>
-      <div style={{ marginTop: 4, fontSize: 17, fontWeight: 700 }}>{props.value}</div>
     </div>
   );
 }
@@ -517,6 +423,7 @@ function ModelCard(props: {
         textAlign: "left",
         cursor: "pointer",
         boxShadow: props.selected ? "0 0 0 4px rgba(198,166,247,0.18)" : "none",
+        transition: "all 0.3s ease",
       }}
     >
       {/* Model Image */}

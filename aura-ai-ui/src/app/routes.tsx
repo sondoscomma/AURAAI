@@ -18,6 +18,7 @@ import UploadYourModel from "../pages/UploadYourModel";
 import GenerateAiModel from "../pages/GenerateAiModel";
  import AuraModels from "../pages/AuraModels";
  import ProfileSettings from "../pages/ProfileSettings";
+ import UploadGarment from "../pages/UploadGarment";
 
 export const routes: RouteObject[] = [
   {
@@ -35,6 +36,8 @@ export const routes: RouteObject[] = [
       { path: "/app/generate-ai-model", element: <GenerateAiModel /> },
       { path: "/app/aura-models", element: <AuraModels /> },
       { path: "/app/profile", element: <ProfileSettings /> },
+      { path: "/app/upload-garment", element: <UploadGarment /> },
+
     ],
   },
   {
@@ -42,7 +45,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: "/app", element: <Dashboard /> },
       { path: "/app/chat", element: <Chat /> },
-      {path: "/app/generation",element:<Generation/>}
+      {path: "/app/generation",element:<Generation />}
     ],
   },
 ];

@@ -1,16 +1,17 @@
 import type { JSX, CSSProperties, ReactNode, ChangeEvent } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import GenerationFlow from "../components/GenerationFlow";
 
 // Brand Colors
 const COLORS = {
-  primary: '#532C86',        // Indigo Velvet
-  secondary: '#C6A6F7',      // Mauve
-  background: '#0d0d0d',     // Dark background
-  onyx: '#161616',           // Onyx
-  platinum: '#EDEDED',       // Platinum
-  deepTwilight: '#2B144C',  // Deep twilight
-  error: '#ff7b7b'           // Error red
+  primary: '#532C86',
+  secondary: '#C6A6F7',
+  background: '#0d0d0d',
+  onyx: '#161616',
+  platinum: '#EDEDED',
+  deepTwilight: '#2B144C',
+  error: '#ff7b7b'
 };
 
 // Brand Fonts
@@ -24,20 +25,6 @@ type Gender = "Female" | "Male";
 interface HistoryItem {
   title: string;
   time: string;
-}
-
-interface StepProps {
-  icon: string;
-  title: string;
-  subtitle: string;
-  active?: boolean;
-  faded?: boolean;
-}
-
-interface HeaderSmallProps {
-  icon: string;
-  title: string;
-  action?: string;
 }
 
 interface ChipButtonProps {
@@ -86,7 +73,7 @@ export default function GenerateAiModel(): JSX.Element {
   const [bodyType, setBodyType] = useState("Slim");
   const [clothingStyle, setClothingStyle] = useState("Modern Elegant");
   const [pose, setPose] = useState("Standing Straight");
-  const [history, setHistory] = useState<{ title: string; time: string }[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -245,17 +232,6 @@ export default function GenerateAiModel(): JSX.Element {
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <button
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "rgba(237,237,237,0.7)",
-              cursor: "pointer",
-              fontSize: 18,
-            }}
-          >
-            ❓
-          </button>
-          <button
             type="button"
             onClick={() => nav("/app/profile")}
             style={{
@@ -285,49 +261,8 @@ export default function GenerateAiModel(): JSX.Element {
           overflow: "hidden",
         }}
       >
-        {/* LEFT SIDEBAR - GENERATION FLOW */}
-        <aside
-          style={{
-            background: COLORS.background,
-            borderRight: "1px solid rgba(83,44,134,0.2)",
-            padding: "32px 24px",
-            overflowY: "auto",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: "rgba(198,166,247,0.8)",
-              letterSpacing: "0.06em",
-              marginBottom: 24,
-              textTransform: "uppercase",
-              fontFamily: FONTS.primary,
-            }}
-          >
-            Generation Flow
-          </div>
-
-          <Step
-            active
-            icon="👤"
-            title="Choose Model"
-            subtitle="In Progress"
-          />
-          <Step
-            icon="👕"
-            title="Upload Garment"
-            subtitle="Next step"
-            faded
-          />
-          <Step
-            icon="🪄"
-            title="Generate"
-            subtitle="Processing"
-            faded
-          />
-          <Step icon="⬇" title="Results" subtitle="Final step" faded />
-        </aside>
+        {/* LEFT SIDEBAR - Generation Flow with Step 3 glowing */}
+        <GenerationFlow activeStep={3} />
 
         {/* CENTER - MAIN CONTENT */}
         <main
@@ -529,7 +464,6 @@ export default function GenerateAiModel(): JSX.Element {
                       gap: 20,
                     }}
                   >
-                    {/* GENDER */}
                     <Field label="Gender">
                       <div
                         style={{
@@ -554,7 +488,6 @@ export default function GenerateAiModel(): JSX.Element {
                       </div>
                     </Field>
 
-                    {/* AGE RANGE DROPDOWN */}
                     <Field label="Age Range">
                       <select
                         value={ageRange}
@@ -604,7 +537,6 @@ export default function GenerateAiModel(): JSX.Element {
                       </select>
                     </Field>
 
-                    {/* ETHNICITY */}
                     <Field label="Ethnicity">
                       <Input
                         value={ethnicity}
@@ -612,7 +544,6 @@ export default function GenerateAiModel(): JSX.Element {
                       />
                     </Field>
 
-                    {/* BODY TYPE */}
                     <Field label="Body Type">
                       <Input
                         value={bodyType}
@@ -620,7 +551,6 @@ export default function GenerateAiModel(): JSX.Element {
                       />
                     </Field>
 
-                    {/* CLOTHING STYLE */}
                     <Field label="Clothing Style">
                       <Input
                         value={clothingStyle}
@@ -628,7 +558,6 @@ export default function GenerateAiModel(): JSX.Element {
                       />
                     </Field>
 
-                    {/* POSE */}
                     <Field label="Pose">
                       <Input value={pose} onChange={setPose} />
                     </Field>
@@ -744,7 +673,7 @@ export default function GenerateAiModel(): JSX.Element {
                       >
                         {isGenerating ? (
                           <>
-                            Nano Banana Pro is creating
+                            AI is creating
                             <br />
                             your AI fashion model...
                           </>
@@ -928,69 +857,6 @@ export default function GenerateAiModel(): JSX.Element {
 
 // ============ COMPONENT PARTS ============
 
-function Step(props: StepProps): JSX.Element {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 12,
-        alignItems: "center",
-        padding: "14px",
-        borderRadius: 10,
-        marginBottom: 12,
-        background: props.active
-          ? "rgba(83,44,134,0.35)"
-          : "rgba(255,255,255,0.03)",
-        border: props.active
-          ? "1px solid rgba(198,166,247,0.45)"
-          : "1px solid rgba(255,255,255,0.05)",
-        opacity: props.faded ? 0.35 : 1,
-        transition: "all 0.3s ease",
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: props.active
-            ? `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`
-            : "rgba(255,255,255,0.08)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 16,
-        }}
-      >
-        {props.icon}
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: COLORS.platinum,
-            fontFamily: FONTS.primary,
-          }}
-        >
-          {props.title}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: "rgba(237,237,237,0.45)",
-            marginTop: 2,
-            fontFamily: FONTS.secondary,
-          }}
-        >
-          {props.subtitle}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Panel({ children }: PanelProps): JSX.Element {
   return (
     <div
@@ -1007,7 +873,7 @@ function Panel({ children }: PanelProps): JSX.Element {
   );
 }
 
-function HeaderSmall(props: HeaderSmallProps): JSX.Element {
+function HeaderSmall(props: { icon: string; title: string; action?: string }): JSX.Element {
   return (
     <div
       style={{
@@ -1055,14 +921,6 @@ function HeaderSmall(props: HeaderSmallProps): JSX.Element {
 function ChipButton(props: ChipButtonProps): JSX.Element {
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
-  const handleMouseEnter = (): void => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = (): void => {
-    setIsHovered(false);
-  };
-
   return (
     <button
       type="button"
@@ -1081,8 +939,8 @@ function ChipButton(props: ChipButtonProps): JSX.Element {
         transition: "all 0.3s ease",
         fontFamily: FONTS.secondary,
       }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {props.children}
     </button>
@@ -1111,16 +969,6 @@ function Field(props: FieldProps): JSX.Element {
 }
 
 function Input(props: InputProps): JSX.Element {
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>): void => {
-    e.currentTarget.style.borderColor = "rgba(198,166,247,0.4)";
-    e.currentTarget.style.background = "rgba(43,20,76,0.5)";
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
-    e.currentTarget.style.borderColor = "rgba(237,237,237,0.14)";
-    e.currentTarget.style.background = "rgba(43,20,76,0.35)";
-  };
-
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     props.onChange(e.target.value);
   };
@@ -1144,8 +992,14 @@ function Input(props: InputProps): JSX.Element {
         fontFamily: FONTS.secondary,
         transition: "all 0.3s ease",
       } as CSSProperties}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
+      onFocus={(e: React.FocusEvent<HTMLInputElement>): void => {
+        e.currentTarget.style.borderColor = "rgba(198,166,247,0.4)";
+        e.currentTarget.style.background = "rgba(43,20,76,0.5)";
+      }}
+      onBlur={(e: React.FocusEvent<HTMLInputElement>): void => {
+        e.currentTarget.style.borderColor = "rgba(237,237,237,0.14)";
+        e.currentTarget.style.background = "rgba(43,20,76,0.35)";
+      }}
     />
   );
 }
@@ -1260,14 +1114,7 @@ function History(props: HistoryProps): JSX.Element {
         <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.platinum, fontFamily: FONTS.primary }}>
           {props.title}
         </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: "rgba(237,237,237,0.45)",
-            marginTop: 3,
-            fontFamily: FONTS.secondary,
-          }}
-        >
+        <div style={{ fontSize: 11, color: "rgba(237,237,237,0.45)", marginTop: 2 }}>
           {props.time}
         </div>
       </div>
