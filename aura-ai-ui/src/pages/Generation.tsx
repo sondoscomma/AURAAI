@@ -552,6 +552,42 @@ export default function Generation(): JSX.Element {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {/* Logout button */}
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              nav("/");
+            }}
+            style={{
+              height: "36px",
+              padding: "0 16px",
+              borderRadius: "8px",
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.06)",
+              color: "rgba(255,255,255,0.6)",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(239,68,68,0.12)";
+              e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)";
+              e.currentTarget.style.color = "#f87171";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+              e.currentTarget.style.color = "rgba(255,255,255,0.6)";
+            }}
+          >
+            {"\u2190"} Logout
+          </button>
+
           {/* Profile button */}
           <button
             onClick={() => nav("/app/profile")}
@@ -711,7 +747,7 @@ export default function Generation(): JSX.Element {
                   }
                 }}
               >
-                choose model
+                Choose model
                 <span>&rarr;</span>
               </button>
             </div>
