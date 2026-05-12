@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
+import AuraLogo from "../components/AuraLogo";
 import { getUser } from "../components/localAuth";
 
 // ─── Brand constants ───
@@ -141,25 +142,33 @@ export default function TryOnResult(): JSX.Element {
     }
   }, [resultImage, backendSaveStatus, saveToBackend]);
 
-  // ─── Download handler ───
-  const handleDownload = (): void => {
-    if (!resultImage) return;
+  // ─── Download helper ───
+  const downloadImage = (imageUrl: string, filename: string): void => {
     const link = document.createElement("a");
-    link.href = resultImage;
-    link.download = `aura-tryon-result-${activeDirection}-${Date.now()}.png`;
+    link.href = imageUrl;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const handleDownload = (): void => {
+    if (!activeImage) return;
+    downloadImage(activeImage, `aura-tryon-${activeDirection}-${Date.now()}.png`);
+  };
+
   const handleDownloadAll = (): void => {
-    if (!resultImage) return;
-    const link = document.createElement("a");
-    link.href = resultImage;
-    link.download = `aura-tryon-result-all-views-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const frontImg = state?.frontImage || resultImage;
+    const rightImg = state?.rightImage || resultImage;
+    if (frontImg) {
+      downloadImage(frontImg, `aura-tryon-front-${Date.now()}.png`);
+    }
+    // Small delay so browser doesn't block the second download
+    setTimeout(() => {
+      if (rightImg) {
+        downloadImage(rightImg, `aura-tryon-right-${Date.now()}.png`);
+      }
+    }, 300);
   };
 
   // Get the correct image for the active direction
@@ -201,21 +210,7 @@ export default function TryOnResult(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 20,
-              fontWeight: 700,
-            }}
-          >
-            {"\u270E"}
-          </div>
+          <AuraLogo size={40} />
           <div>
             <div
               style={{
