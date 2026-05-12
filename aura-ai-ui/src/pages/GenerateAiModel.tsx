@@ -1,7 +1,8 @@
 import type { JSX, CSSProperties, ReactNode, ChangeEvent } from "react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
+import AuraLogo from "../components/AuraLogo";
 
 // Brand Colors
 const COLORS = {
@@ -65,6 +66,15 @@ interface PanelProps {
 
 export default function GenerateAiModel(): JSX.Element {
   const nav = useNavigate();
+  const location = useLocation();
+
+  // Get garment image from previous page (if any)
+  const routeState = location.state as {
+    garmentPreview?: string;
+    garmentBase64?: string;  // base64 data-URL from Upload Garment
+    garmentUploaded?: boolean;
+    selected?: string;
+  } | null;
 
   const [prompt, setPrompt] = useState("");
   const [gender, setGender] = useState<Gender>("Female");
@@ -75,9 +85,22 @@ export default function GenerateAiModel(): JSX.Element {
   const [pose, setPose] = useState("Standing Straight");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [rightImage, setRightImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
+
+  // Built-in garment upload + base64 tracking for API calls
+  const garmentInputRef = useRef<HTMLInputElement>(null);
+  const [_garmentFile, setGarmentFile] = useState<File | null>(null);
+  const [garmentPreview, setGarmentPreview] = useState<string | null>(
+    routeState?.garmentBase64 || routeState?.garmentPreview || null
+  );
+  const [garmentBase64, setGarmentBase64] = useState<string | null>(
+    routeState?.garmentBase64 || null
+  );
+  const [garmentDragging, setGarmentDragging] = useState(false);
   const ageRangeOptions = [
     "18 - 21 years",
     "20 - 25 years",
@@ -97,6 +120,47 @@ export default function GenerateAiModel(): JSX.Element {
     );
   }
 
+  // ── Garment upload handlers ──
+  const handleGarmentFile = (files: FileList | null): void => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return;
+    setGarmentFile(file);
+    const blobUrl = URL.createObjectURL(file);
+    setGarmentPreview(blobUrl);
+    // Also convert to base64 for API calls
+    const reader = new FileReader();
+    reader.onload = () => setGarmentBase64(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleGarmentDragOver = useCallback((e: React.DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    setGarmentDragging(true);
+  }, []);
+
+  const handleGarmentDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    setGarmentDragging(false);
+  }, []);
+
+  const handleGarmentDrop = useCallback((e: React.DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    setGarmentDragging(false);
+    handleGarmentFile(e.dataTransfer.files);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const removeGarment = (): void => {
+    if (garmentPreview && garmentPreview.startsWith("blob:")) URL.revokeObjectURL(garmentPreview);
+    setGarmentFile(null);
+    setGarmentPreview(null);
+    setGarmentBase64(null);
+  };
+
   async function handleGenerate(): Promise<void> {
     try {
       setIsGenerating(true);
@@ -110,30 +174,60 @@ export default function GenerateAiModel(): JSX.Element {
         return;
       }
 
-      const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+      // Build the request body — include garment image (base64) if available
+      const baseRequestBody = {
+        gender,
+        ageRange,
+        ethnicity,
+        bodyType,
+        clothingStyle,
+        pose,
+        // Send the garment base64 image to the backend — it will use
+        // openai.images.edit() with the garment as a reference when present
+        ...(garmentBase64 ? { garmentImage: garmentBase64 } : {}),
+      };
+
+      // Generate front view
+      const frontPrompt = garmentBase64
+        ? `${prompt}, front view facing camera, full body shot, wearing the uploaded garment`
+        : `${prompt}, front view facing camera, full body shot`;
+      const frontRes = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          prompt,
-          gender,
-          ageRange,
-          ethnicity,
-          bodyType,
-          clothingStyle,
-          pose,
+          ...baseRequestBody,
+          prompt: frontPrompt,
         }),
       });
-      const data = await res.json();
+      const frontData = await frontRes.json();
+      if (!frontRes.ok) throw new Error(frontData.message || "Front view generation failed");
+      const frontImageUrl = `data:${frontData.mimeType};base64,${frontData.imageBase64}`;
+      setFrontImage(frontImageUrl);
+      setGeneratedImage(frontImageUrl);
 
-      if (!res.ok) {
-        throw new Error(data.message || "Generation failed");
-      }
+      // Generate right view
+      const rightPrompt = garmentBase64
+        ? `${prompt}, right side profile view, full body shot turned 90 degrees to the right, wearing the uploaded garment`
+        : `${prompt}, right side profile view, full body shot turned 90 degrees to the right`;
+      const rightRes = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...baseRequestBody,
+          prompt: rightPrompt,
+        }),
+      });
+      const rightData = await rightRes.json();
+      if (!rightRes.ok) throw new Error(rightData.message || "Right view generation failed");
+      const rightImageUrl = `data:${rightData.mimeType};base64,${rightData.imageBase64}`;
+      setRightImage(rightImageUrl);
 
-      const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
-      setGeneratedImage(imageUrl);
       setShowResultButton(true);
 
       const newModel: HistoryItem = {
@@ -194,21 +288,7 @@ export default function GenerateAiModel(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 20,
-              fontWeight: 700,
-            }}
-          >
-            ✨
-          </div>
+          <AuraLogo size={40} />
           <div>
             <div
               style={{
@@ -642,6 +722,8 @@ export default function GenerateAiModel(): JSX.Element {
                             nav("/app/generation-result", {
                               state: {
                                 generatedImage,
+                                frontImage,
+                                rightImage,
                                 method: "AI Generation",
                                 title: `${gender} ${ethnicity} Model`,
                               },
@@ -692,7 +774,7 @@ export default function GenerateAiModel(): JSX.Element {
                         fontSize: 32,
                       }}
                     >
-                      {isGenerating ? "⚡" : "🖼️"}
+                      {isGenerating ? "\u26A1" : "\u{1F5BC}\uFE0F"}
                     </div>
 
                     <div>
@@ -704,7 +786,7 @@ export default function GenerateAiModel(): JSX.Element {
                           fontFamily: FONTS.primary,
                         }}
                       >
-                        {isGenerating ? "Generating Model..." : "Ready to Generate"}
+                        {isGenerating ? "Generating 2 Views..." : "Ready to Generate"}
                       </div>
 
                       <div
@@ -717,9 +799,9 @@ export default function GenerateAiModel(): JSX.Element {
                       >
                         {isGenerating ? (
                           <>
-                            AI is creating
+                            AI is creating front & right views
                             <br />
-                            your AI fashion model...
+                            of your fashion model...
                           </>
                         ) : (
                           <>
@@ -729,6 +811,82 @@ export default function GenerateAiModel(): JSX.Element {
                           </>
                         )}
                       </div>
+
+                      {/* Garment upload section */}
+                      {!generatedImage && !isGenerating && (
+                        <div style={{ marginTop: 16 }}>
+                          <div style={{ fontSize: 11, color: "rgba(198,166,247,0.6)", fontWeight: 600, textTransform: "uppercase", marginBottom: 8 }}>
+                            {"\u{1F455}"} {routeState?.garmentBase64 ? "Garment from Previous Step" : "Upload Garment (Optional)"}
+                          </div>
+                          {garmentPreview ? (
+                            <div style={{ position: "relative", display: "inline-block" }}>
+                              <img
+                                src={garmentPreview}
+                                alt="Uploaded garment"
+                                style={{
+                                  width: "120px",
+                                  height: "120px",
+                                  objectFit: "cover",
+                                  borderRadius: 10,
+                                  border: "1px solid rgba(198,166,247,0.3)",
+                                }}
+                              />
+                              <button
+                                onClick={removeGarment}
+                                style={{
+                                  position: "absolute",
+                                  top: 4,
+                                  right: 4,
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: "50%",
+                                  border: "none",
+                                  background: "rgba(239,68,68,0.8)",
+                                  color: "#fff",
+                                  cursor: "pointer",
+                                  fontSize: 11,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                \u2715
+                              </button>
+                            </div>
+                          ) : (
+                            <div
+                              onDragOver={handleGarmentDragOver}
+                              onDragLeave={handleGarmentDragLeave}
+                              onDrop={handleGarmentDrop}
+                              onClick={() => garmentInputRef.current?.click()}
+                              style={{
+                                width: "120px",
+                                height: "120px",
+                                borderRadius: 10,
+                                border: "2px dashed rgba(198,166,247,0.3)",
+                                background: garmentDragging ? "rgba(139,92,246,0.15)" : "rgba(43,20,76,0.2)",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                gap: 4,
+                                transition: "all 0.3s ease",
+                              }}
+                            >
+                              <input
+                                ref={garmentInputRef}
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={(e) => handleGarmentFile(e.target.files)}
+                                style={{ display: "none" }}
+                              />
+                              <span style={{ fontSize: 20, color: "rgba(198,166,247,0.5)" }}>+</span>
+                              <span style={{ fontSize: 9, color: "rgba(237,237,237,0.4)" }}>Add garment</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {error && (
                         <div
@@ -813,7 +971,7 @@ export default function GenerateAiModel(): JSX.Element {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                {isGenerating ? "Generating..." : "⏻ Generate Model"}
+                {isGenerating ? "Generating 2 Views..." : "⏻ Generate Model"}
               </button>
             </div>
           </div>
@@ -855,7 +1013,8 @@ export default function GenerateAiModel(): JSX.Element {
             }}
           >
             <Config label="METHOD" value="AI Generation" />
-            <Config label="CREDITS" value="1 / Generation" />
+            <Config label="GARMENT" value={garmentBase64 ? "Uploaded" : "None"} green={!!garmentBase64} />
+            <Config label="CREDITS" value="2 / Generation" />
             <Config label="QUALITY" value="High (4K)" green />
           </div>
 

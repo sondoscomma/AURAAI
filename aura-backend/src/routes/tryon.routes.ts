@@ -27,8 +27,16 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
       )
     );
 
-    const prompt =
-      "Create a realistic virtual try-on image. Use the person from the uploaded images and dress them with the clothing from the reference images. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
+    // Allow custom prompt from frontend, or use the default two-view prompt
+    const customPrompt = req.body.prompt as string | undefined;
+    const prompt = customPrompt?.trim()
+      ? customPrompt
+      : `Generate two virtual try-on images of the same person wearing the provided clothing:
+
+1. FRONT VIEW — A realistic front-facing full-body shot showing the person wearing the clothing. Keep the face, body shape, pose, lighting, and background realistic.
+2. RIGHT SIDE VIEW — A realistic right-side profile full-body shot of the same person wearing the same clothing, viewed from their right side. Maintain consistent lighting, clothing fit, and background style.
+
+Both images should look clean, fashionable, and suitable for an e-commerce fashion platform. Ensure the clothing appearance is consistent across both views.`;
 
     const result = await openai.images.edit({
       model: "gpt-image-1",
@@ -36,18 +44,22 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
       prompt,
       size: "1024x1536",
       quality: "high",
+      n: 2, // Request 2 images: front view + right side view
     });
 
-    const imageBase64 = result.data?.[0]?.b64_json;
-
-    if (!imageBase64) {
-      return res.status(500).json({ message: "No image generated." });
+    if (!result.data || result.data.length < 2) {
+      return res.status(500).json({
+        message: "Expected 2 images but did not receive enough from the API.",
+      });
     }
 
-    res.json({
-      imageBase64,
+    const images = result.data.map((item, index) => ({
+      view: index === 0 ? "front" : "right",
+      imageBase64: item.b64_json,
       mimeType: "image/png",
-    });
+    }));
+
+    res.json({ images });
   } catch (error: any) {
     console.error("Try-on error:", error);
 

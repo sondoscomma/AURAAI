@@ -22,7 +22,7 @@ const FONTS = {
 const API_URL = "https://auraai-backend-6a8n.onrender.com";
 
 // ─── Types ───
-type Direction = "front" | "back" | "left" | "right";
+type Direction = "front" | "right";
 
 interface DirectionTab {
   id: Direction;
@@ -32,8 +32,6 @@ interface DirectionTab {
 
 const DIRECTIONS: DirectionTab[] = [
   { id: "front", label: "Front View", icon: "\u{1F464}" },
-  { id: "left", label: "Left View", icon: "\u2B05" },
-  { id: "back", label: "Back View", icon: "\u{1F504}" },
   { id: "right", label: "Right View", icon: "\u27A1" },
 ];
 
@@ -51,11 +49,13 @@ export default function TryOnResult(): JSX.Element {
   // Get the try-on result image from navigation state
   const state = location.state as {
     resultImage?: string;
+    frontImage?: string;
+    rightImage?: string;
     personPreview?: string;
     garmentPreview?: string;
   } | null;
 
-  const resultImage = state?.resultImage || null;
+  const resultImage = state?.resultImage || state?.frontImage || null;
   const personPreview = state?.personPreview || null;
   const garmentPreview = state?.garmentPreview || null;
 
@@ -162,21 +162,14 @@ export default function TryOnResult(): JSX.Element {
     document.body.removeChild(link);
   };
 
-  // ─── Direction transform CSS ───
-  const getTransformStyle = (dir: Direction): CSSProperties => {
-    switch (dir) {
-      case "front":
-        return { transform: "scaleX(1)" };
-      case "back":
-        return { transform: "scaleX(-1)" };
-      case "left":
-        return { transform: "perspective(800px) rotateY(15deg)" };
-      case "right":
-        return { transform: "perspective(800px) rotateY(-15deg)" };
-      default:
-        return {};
-    }
+  // Get the correct image for the active direction
+  const getActiveImage = (): string | null => {
+    const frontImg = state?.frontImage || resultImage;
+    const rightImg = state?.rightImage || resultImage;
+    return activeDirection === "front" ? frontImg : rightImg;
   };
+
+  const activeImage = getActiveImage();
 
   return (
     <div
@@ -401,7 +394,7 @@ export default function TryOnResult(): JSX.Element {
                     }}
                   >
                     Your virtual try-on image has been generated and saved to
-                    your profile. View it from every direction.
+                    your profile. View it from front and right angles.
                   </p>
                 </div>
               </div>
@@ -537,7 +530,7 @@ export default function TryOnResult(): JSX.Element {
                     </div>
 
                     <img
-                      src={resultImage}
+                      src={activeImage || resultImage || undefined}
                       alt={`Virtual try-on result - ${activeDirection} view`}
                       style={{
                         maxWidth: "100%",
@@ -545,8 +538,7 @@ export default function TryOnResult(): JSX.Element {
                         objectFit: "contain",
                         borderRadius: 12,
                         transition:
-                          "transform 0.5s cubic-bezier(0.16,1,0.3,1)",
-                        ...getTransformStyle(activeDirection),
+                          "opacity 0.4s cubic-bezier(0.16,1,0.3,1)",
                       }}
                     />
 
@@ -567,7 +559,7 @@ export default function TryOnResult(): JSX.Element {
                       >
                         {activeDirection}
                       </span>{" "}
-                      direction
+                      angle
                     </div>
                   </>
                 ) : (
@@ -835,76 +827,80 @@ export default function TryOnResult(): JSX.Element {
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
-                      gap: 8,
+                      gap: 12,
                     }}
                   >
-                    {DIRECTIONS.map((dir) => (
-                      <button
-                        key={dir.id}
-                        onClick={() => setActiveDirection(dir.id)}
-                        style={{
-                          borderRadius: 8,
-                          border:
-                            activeDirection === dir.id
-                              ? "1px solid rgba(198,166,247,0.6)"
-                              : "1px solid rgba(237,237,237,0.08)",
-                          background:
-                            activeDirection === dir.id
-                              ? "rgba(198,166,247,0.15)"
-                              : "rgba(43,20,76,0.1)",
-                          padding: 8,
-                          cursor: "pointer",
-                          transition: "all 0.3s ease",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (activeDirection !== dir.id) {
-                            e.currentTarget.style.background =
-                              "rgba(43,20,76,0.25)";
-                            e.currentTarget.style.borderColor =
-                              "rgba(198,166,247,0.3)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (activeDirection !== dir.id) {
-                            e.currentTarget.style.background =
-                              "rgba(43,20,76,0.1)";
-                            e.currentTarget.style.borderColor =
-                              "rgba(237,237,237,0.08)";
-                          }
-                        }}
-                      >
-                        {resultImage && (
-                          <img
-                            src={resultImage}
-                            alt={dir.label}
-                            style={{
-                              width: "100%",
-                              height: 60,
-                              objectFit: "cover",
-                              borderRadius: 4,
-                              ...getTransformStyle(dir.id),
-                            }}
-                          />
-                        )}
-                        <span
+                    {DIRECTIONS.map((dir) => {
+                      const dirImg = dir.id === "front"
+                        ? (state?.frontImage || resultImage)
+                        : (state?.rightImage || resultImage);
+                      return (
+                        <button
+                          key={dir.id}
+                          onClick={() => setActiveDirection(dir.id)}
                           style={{
-                            fontSize: 10,
-                            fontWeight:
-                              activeDirection === dir.id ? 600 : 400,
-                            color:
+                            borderRadius: 8,
+                            border:
                               activeDirection === dir.id
-                                ? COLORS.secondary
-                                : "rgba(237,237,237,0.5)",
+                                ? "1px solid rgba(198,166,247,0.6)"
+                                : "1px solid rgba(237,237,237,0.08)",
+                            background:
+                              activeDirection === dir.id
+                                ? "rgba(198,166,247,0.15)"
+                                : "rgba(43,20,76,0.1)",
+                            padding: 8,
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (activeDirection !== dir.id) {
+                              e.currentTarget.style.background =
+                                "rgba(43,20,76,0.25)";
+                              e.currentTarget.style.borderColor =
+                                "rgba(198,166,247,0.3)";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (activeDirection !== dir.id) {
+                              e.currentTarget.style.background =
+                                "rgba(43,20,76,0.1)";
+                              e.currentTarget.style.borderColor =
+                                "rgba(237,237,237,0.08)";
+                            }
                           }}
                         >
-                          {dir.icon} {dir.label}
-                        </span>
-                      </button>
-                    ))}
+                          {dirImg && (
+                            <img
+                              src={dirImg}
+                              alt={dir.label}
+                              style={{
+                                width: "100%",
+                                height: 80,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                              }}
+                            />
+                          )}
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight:
+                                activeDirection === dir.id ? 600 : 400,
+                              color:
+                                activeDirection === dir.id
+                                  ? COLORS.secondary
+                                  : "rgba(237,237,237,0.5)",
+                            }}
+                          >
+                            {dir.icon} {dir.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

@@ -2,22 +2,31 @@ import type { JSX } from "react";
 import { useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
+import AuraLogo from "../components/AuraLogo";
+
+/** Convert a File to a base64 data-URL string */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function UploadGarment(): JSX.Element {
   const nav = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const selection: string = (location.state as { selected?: string })?.selected || "upload";
+  // Get the selected mode from Generation page
+  const routeState = location.state as { selected?: string } | null;
+  const selectedMode = routeState?.selected || "upload";
+
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-
-  const routeBySelection: Record<string, string> = {
-    upload: "/app/upload-your-model",
-    generate: "/app/generate-ai-model",
-    aura: "/app/aura-models",
-  };
+  const [isConverting, setIsConverting] = useState(false);
 
   const handleFileChange = (selectedFiles: FileList | null): void => {
     if (!selectedFiles) return;
@@ -62,18 +71,50 @@ export default function UploadGarment(): JSX.Element {
     []
   );
 
-  const handleContinue = (): void => {
-    const targetRoute = routeBySelection[selection] || "/app/generation";
-    nav(targetRoute, {
-      state: { selected: selection, garmentUploaded: true, garmentFiles: files.length },
-    });
+  const handleContinue = async (): Promise<void> => {
+    setIsConverting(true);
+    try {
+      // Convert first garment file to base64 for passing via router state
+      const garmentBase64 = files[0] ? await fileToBase64(files[0]) : null;
+
+      if (selectedMode === "generate") {
+        // Go to Generate AI Model page with garment base64
+        nav("/app/generate-ai-model", {
+          state: {
+            selected: "generate",
+            garmentUploaded: true,
+            garmentFiles: files.length,
+            garmentPreview: previews[0] || null,
+            garmentBase64,   // base64 data-URL for API call
+          },
+        });
+      } else {
+        // Go to Upload Your Model page (Try-On)
+        nav("/app/upload-your-model", {
+          state: {
+            selected: "upload",
+            garmentUploaded: true,
+            garmentFiles: files.length,
+            garmentPreview: previews[0] || null,
+            garmentBase64,
+          },
+        });
+      }
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   const handleSkip = (): void => {
-    const targetRoute = routeBySelection[selection] || "/app/generation";
-    nav(targetRoute, {
-      state: { selected: selection, garmentUploaded: false },
-    });
+    if (selectedMode === "generate") {
+      nav("/app/generate-ai-model", {
+        state: { selected: "generate", garmentUploaded: false, garmentPreview: null },
+      });
+    } else {
+      nav("/app/upload-your-model", {
+        state: { selected: "upload", garmentUploaded: false, garmentPreview: null },
+      });
+    }
   };
 
   return (
@@ -108,26 +149,15 @@ export default function UploadGarment(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #6B46C1, #8B5CF6)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "#fff",
-              flexShrink: 0,
-            }}
-          >
-            A
+          <AuraLogo size={38} />
+          <div>
+            <span style={{ fontWeight: 600, fontSize: "18px", color: "#fff" }}>
+              AURA AI
+            </span>
+            <div style={{ fontSize: "10px", color: "rgba(198,166,247,0.6)", letterSpacing: "0.04em" }}>
+              {selectedMode === "generate" ? "AI Generation" : "Virtual Try-On"}
+            </div>
           </div>
-          <span style={{ fontWeight: 600, fontSize: "18px", color: "#fff" }}>
-            AURA AI
-          </span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -535,6 +565,7 @@ export default function UploadGarment(): JSX.Element {
 
               <button
                 onClick={handleContinue}
+                disabled={isConverting || files.length === 0}
                 style={{
                   height: "48px",
                   padding: "0 28px",
@@ -544,18 +575,19 @@ export default function UploadGarment(): JSX.Element {
                   gap: "8px",
                   borderRadius: "10px",
                   border: "none",
-                  background: files.length > 0
+                  background: files.length > 0 && !isConverting
                     ? "linear-gradient(135deg, #6B46C1, #8B5CF6)"
                     : "rgba(255,255,255,0.08)",
                   color: files.length > 0 ? "#fff" : "rgba(255,255,255,0.3)",
                   fontSize: "15px",
                   fontWeight: 600,
-                  cursor: files.length > 0 ? "pointer" : "not-allowed",
+                  cursor: files.length > 0 && !isConverting ? "pointer" : "not-allowed",
                   transition: "all 0.3s ease",
                   whiteSpace: "nowrap",
-                  boxShadow: files.length > 0
+                  boxShadow: files.length > 0 && !isConverting
                     ? "0 4px 20px rgba(139, 92, 246, 0.35)"
                     : "none",
+                  opacity: isConverting ? 0.7 : 1,
                 }}
                 onMouseEnter={(e) => {
                   if (files.length > 0) {
@@ -576,7 +608,7 @@ export default function UploadGarment(): JSX.Element {
                   }
                 }}
               >
-                Continue to Generate
+                {isConverting ? "Preparing..." : "Continue to Generate"}
                 <span>&rarr;</span>
               </button>
             </div>

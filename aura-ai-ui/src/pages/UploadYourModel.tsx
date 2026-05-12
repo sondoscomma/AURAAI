@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
+import AuraLogo from "../components/AuraLogo";
 
 const API_URL = "https://auraai-backend-6a8n.onrender.com";
 
@@ -21,14 +22,16 @@ export default function UploadYourModel(): JSX.Element {
   const [isDraggingGarment, setIsDraggingGarment] = useState(false);
 
   // Generation state
-  const [resultImage, setResultImage] = useState<string | null>(null);
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [rightImage, setRightImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingView, setGeneratingView] = useState<"" | "front" | "right" | "both">("");
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
 
-  // Save to history when result is generated
+  // Save to history when both results are generated
   useEffect(() => {
-    if (resultImage) {
+    if (frontImage && rightImage) {
       try {
         const historyKey = "aura_generation_history";
         const existing = localStorage.getItem(historyKey);
@@ -36,8 +39,8 @@ export default function UploadYourModel(): JSX.Element {
 
         const newEntry = {
           id: Date.now().toString(),
-          image: resultImage,
-          method: "Virtual Try-On",
+          image: frontImage,
+          method: "Virtual Try-On (2 Views)",
           title: "Virtual Try-On Result",
           createdAt: new Date().toISOString(),
           type: "tryon",
@@ -51,7 +54,7 @@ export default function UploadYourModel(): JSX.Element {
         // Silently fail
       }
     }
-  }, [resultImage]);
+  }, [frontImage, rightImage]);
 
   // ─── Person upload handlers ───
   const handlePersonFileChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -61,7 +64,8 @@ export default function UploadYourModel(): JSX.Element {
 
     setPersonFile(file);
     setPersonPreview(URL.createObjectURL(file));
-    setResultImage(null);
+    setFrontImage(null);
+    setRightImage(null);
     setShowResultButton(false);
     setError("");
   };
@@ -86,7 +90,8 @@ export default function UploadYourModel(): JSX.Element {
     if (file && ["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setPersonFile(file);
       setPersonPreview(URL.createObjectURL(file));
-      setResultImage(null);
+      setFrontImage(null);
+      setRightImage(null);
       setShowResultButton(false);
       setError("");
     }
@@ -100,7 +105,8 @@ export default function UploadYourModel(): JSX.Element {
 
     setGarmentFile(file);
     setGarmentPreview(URL.createObjectURL(file));
-    setResultImage(null);
+    setFrontImage(null);
+    setRightImage(null);
     setShowResultButton(false);
     setError("");
   };
@@ -125,13 +131,41 @@ export default function UploadYourModel(): JSX.Element {
     if (file && ["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setGarmentFile(file);
       setGarmentPreview(URL.createObjectURL(file));
-      setResultImage(null);
+      setFrontImage(null);
+      setRightImage(null);
       setShowResultButton(false);
       setError("");
     }
   }, []);
 
-  // ─── Generate ───
+  // ─── Generate a single view ───
+  async function generateView(
+    viewPrompt: string,
+    viewLabel: "front" | "right"
+  ): Promise<string> {
+    const formData = new FormData();
+    formData.append("images", personFile!);
+    formData.append("images", garmentFile!);
+    formData.append("prompt", viewPrompt);
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API_URL}/api/tryon/generate`, {
+      method: "POST",
+      body: formData,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || `${viewLabel} view generation failed.`);
+    }
+
+    return `data:${data.mimeType};base64,${data.imageBase64}`;
+  }
+
+  // ─── Generate both views ───
   async function handleGenerate(): Promise<void> {
     try {
       if (!personFile || !garmentFile) {
@@ -141,39 +175,40 @@ export default function UploadYourModel(): JSX.Element {
 
       setIsGenerating(true);
       setError("");
+      setFrontImage(null);
+      setRightImage(null);
+      setShowResultButton(false);
 
-      const formData = new FormData();
-      formData.append("images", personFile);
-      formData.append("images", garmentFile);
+      const frontPrompt =
+        "Create a realistic virtual try-on image showing the FRONT view. Use the person from the uploaded images and dress them with the clothing from the reference images. The model must face the camera directly, showing the full front of the outfit. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
-      const token = localStorage.getItem("token");
+      const rightPrompt =
+        "Create a realistic virtual try-on image showing the RIGHT SIDE profile view. Use the person from the uploaded images and dress them with the clothing from the reference images. The model must face to the right, showing the right side profile of the outfit. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
-      const res = await fetch(`${API_URL}/api/tryon/generate`, {
-        method: "POST",
-        body: formData,
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      // Generate both views in parallel
+      setGeneratingView("both");
 
-      const data = await res.json();
+      const [front, right] = await Promise.all([
+        generateView(frontPrompt, "front"),
+        generateView(rightPrompt, "right"),
+      ]);
 
-      if (!res.ok) {
-        throw new Error(data.message || "Try-on generation failed.");
-      }
-
-      setResultImage(`data:${data.mimeType};base64,${data.imageBase64}`);
+      setFrontImage(front);
+      setRightImage(right);
       setShowResultButton(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Try-on generation failed.");
     } finally {
       setIsGenerating(false);
+      setGeneratingView("");
     }
   }
 
-  function downloadResult(): void {
-    if (!resultImage) return;
+  function downloadResult(image: string | null, filename: string): void {
+    if (!image) return;
     const link = document.createElement("a");
-    link.href = resultImage;
-    link.download = "aura-try-on-result.png";
+    link.href = image;
+    link.download = filename;
     link.click();
   }
 
@@ -211,22 +246,15 @@ export default function UploadYourModel(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #532C86, #2B144C)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            ✎
+          <AuraLogo size={38} />
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.04em" }}>
+              AURA AI
+            </span>
+            <div style={{ fontSize: "10px", color: "rgba(198,166,247,0.6)", letterSpacing: "0.04em" }}>
+              Virtual Try-On
+            </div>
           </div>
-          <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.04em" }}>
-            AURA AI
-          </span>
         </div>
 
         <button
@@ -672,7 +700,7 @@ export default function UploadYourModel(): JSX.Element {
                 marginBottom: "16px",
               }}
             >
-              Fixed prompt: Make the person try on the uploaded clothes realistically.
+              Generates 2 views: FRONT view and RIGHT SIDE profile view. Both images will be generated in parallel.
             </div>
 
             {error && (
@@ -714,11 +742,11 @@ export default function UploadYourModel(): JSX.Element {
                 }
               }}
             >
-              {isGenerating ? "Generating Try-On..." : "Generate Try-On"}
+              {isGenerating ? "Generating Try-On (2 Views)..." : "Generate Try-On (2 Views)"}
             </button>
 
             {/* RESULT SECTION */}
-            {resultImage && (
+            {(frontImage || rightImage) && (
               <section
                 style={{
                   marginTop: "28px",
@@ -729,7 +757,7 @@ export default function UploadYourModel(): JSX.Element {
                 }}
               >
                 <h2 style={{ margin: "0 0 8px", fontSize: "24px", fontWeight: 700 }}>
-                  Generated Result
+                  Generated Results (2 Views)
                 </h2>
                 <p
                   style={{
@@ -738,30 +766,113 @@ export default function UploadYourModel(): JSX.Element {
                     fontSize: "13px",
                   }}
                 >
-                  Your AI try-on image has been generated and saved to your profile.
+                  Your AI try-on images have been generated. Front view and right side view.
                 </p>
 
+                {/* TWO VIEW IMAGES */}
                 <div
                   style={{
-                    borderRadius: "14px",
-                    background: "rgba(43,20,76,0.25)",
-                    border: "1px solid rgba(237,237,237,0.12)",
-                    overflow: "hidden",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: "300px",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "20px",
+                    marginBottom: "20px",
                   }}
                 >
-                  <img
-                    src={resultImage}
-                    alt="Generated try-on"
+                  {/* FRONT VIEW */}
+                  <div
                     style={{
-                      width: "100%",
-                      maxHeight: "400px",
-                      objectFit: "contain",
+                      borderRadius: "14px",
+                      background: "rgba(43,20,76,0.25)",
+                      border: "1px solid rgba(237,237,237,0.12)",
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minHeight: "260px",
+                      position: "relative",
                     }}
-                  />
+                  >
+                    {frontImage ? (
+                      <img
+                        src={frontImage}
+                        alt="Front view try-on"
+                        style={{
+                          width: "100%",
+                          maxHeight: "350px",
+                          objectFit: "contain",
+                        }}
+                      />
+                    ) : (
+                      <div style={{ color: "rgba(237,237,237,0.4)", fontSize: "13px" }}>
+                        Generating front view...
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        left: 10,
+                        padding: "4px 10px",
+                        borderRadius: 6,
+                        background: "rgba(83,44,134,0.7)",
+                        border: "1px solid rgba(198,166,247,0.3)",
+                        fontSize: 11,
+                        color: "#C6A6F7",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Front View
+                    </div>
+                  </div>
+
+                  {/* RIGHT VIEW */}
+                  <div
+                    style={{
+                      borderRadius: "14px",
+                      background: "rgba(43,20,76,0.25)",
+                      border: "1px solid rgba(237,237,237,0.12)",
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minHeight: "260px",
+                      position: "relative",
+                    }}
+                  >
+                    {rightImage ? (
+                      <img
+                        src={rightImage}
+                        alt="Right side view try-on"
+                        style={{
+                          width: "100%",
+                          maxHeight: "350px",
+                          objectFit: "contain",
+                        }}
+                      />
+                    ) : (
+                      <div style={{ color: "rgba(237,237,237,0.4)", fontSize: "13px" }}>
+                        Generating right view...
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        left: 10,
+                        padding: "4px 10px",
+                        borderRadius: 6,
+                        background: "rgba(83,44,134,0.7)",
+                        border: "1px solid rgba(198,166,247,0.3)",
+                        fontSize: 11,
+                        color: "#C6A6F7",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Right View
+                    </div>
+                  </div>
                 </div>
 
                 {/* Result action buttons */}
@@ -774,7 +885,7 @@ export default function UploadYourModel(): JSX.Element {
                   }}
                 >
                   <button
-                    onClick={downloadResult}
+                    onClick={() => downloadResult(frontImage, "aura-tryon-front.png")}
                     style={{
                       height: 48,
                       padding: "0 24px",
@@ -799,7 +910,36 @@ export default function UploadYourModel(): JSX.Element {
                       e.currentTarget.style.borderColor = "rgba(198,166,247,0.3)";
                     }}
                   >
-                    ⬇ Download Result
+                    ⬇ Download Front
+                  </button>
+
+                  <button
+                    onClick={() => downloadResult(rightImage, "aura-tryon-right.png")}
+                    style={{
+                      height: 48,
+                      padding: "0 24px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(198,166,247,0.3)",
+                      background: "rgba(198,166,247,0.15)",
+                      color: "#EDEDED",
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(198,166,247,0.25)";
+                      e.currentTarget.style.borderColor = "#C6A6F7";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(198,166,247,0.15)";
+                      e.currentTarget.style.borderColor = "rgba(198,166,247,0.3)";
+                    }}
+                  >
+                    ⬇ Download Right
                   </button>
 
                   {showResultButton && (
@@ -807,7 +947,8 @@ export default function UploadYourModel(): JSX.Element {
                       onClick={() =>
                         nav("/app/tryon-result", {
                           state: {
-                            resultImage,
+                            frontImage,
+                            rightImage,
                             personPreview,
                             garmentPreview,
                           },

@@ -1,11 +1,62 @@
 import type { JSX } from "react";
-import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import uploadImg from "../assets/genration/upload.png";
 import aiImg from "../assets/genration/ai.png";
 import modelsImg from "../assets/genration/models.png";
 import GenerationFlow from "../components/GenerationFlow";
+import AuraLogo from "../components/AuraLogo";
+
+/* ─────────────── CSS keyframe styles injected once ─────────────── */
+function InjectStyles(): JSX.Element {
+  useEffect(() => {
+    const id = "aura-gen-anim-styles";
+    if (document.getElementById(id)) return;
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = `
+      @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+      @keyframes modalSlideUp {
+        from { transform: translateY(60px) scale(0.88); opacity: 0; }
+        to   { transform: translateY(0) scale(1); opacity: 1; }
+      }
+      @keyframes devCardIn {
+        from { transform: translateY(16px) scale(0.95); opacity: 0; }
+        to   { transform: translateY(0) scale(1); opacity: 1; }
+      }
+      @keyframes featurePopIn {
+        from { transform: scale(0.7) rotate(-3deg); opacity: 0; }
+        to   { transform: scale(1) rotate(0deg); opacity: 1; }
+      }
+      @keyframes headerGlow {
+        0%   { text-shadow: 0 0 8px rgba(139,92,246,0.3); }
+        100% { text-shadow: 0 0 20px rgba(139,92,246,0.6), 0 0 40px rgba(139,92,246,0.2); }
+      }
+      .aura-modal-overlay {
+        animation: modalFadeIn 0.3s ease-out;
+      }
+      .aura-modal-card {
+        animation: modalSlideUp 0.5s cubic-bezier(0.16,1,0.3,1);
+      }
+      .aura-dev-card {
+        animation: devCardIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      }
+      .aura-feature-card {
+        animation: featurePopIn 0.45s cubic-bezier(0.16,1,0.3,1) both;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    };
+  }, []);
+  return <></>;
+}
 
 type ModelChoice = "upload" | "generate" | "aura";
 
@@ -16,86 +67,6 @@ interface CardDef {
   desc: string;
   meta: string;
   metaIcon: string;
-}
-
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  color: string;
-  size: number;
-  angle: number;
-  speed: number;
-}
-
-/* ─────────────── CSS keyframe styles injected once ─────────────── */
-function InjectStyles(): JSX.Element {
-  useEffect(() => {
-    const id = "aura-anim-styles";
-    if (document.getElementById(id)) return;
-    const style = document.createElement("style");
-    style.id = id;
-    style.textContent = `
-      @keyframes auraFloat {
-        0%, 100% { transform: translateY(0) scale(1); }
-        50% { transform: translateY(-3px) scale(1.06); }
-      }
-      @keyframes auraGlow {
-        0%, 100% { box-shadow: 0 0 8px rgba(139,92,246,0.4), 0 0 16px rgba(139,92,246,0.15); }
-        50% { box-shadow: 0 0 14px rgba(139,92,246,0.6), 0 0 28px rgba(139,92,246,0.25); }
-      }
-      @keyframes auraRingPulse {
-        0%   { transform: scale(1); opacity: 0.6; }
-        100% { transform: scale(2.2); opacity: 0; }
-      }
-      @keyframes particleBurst {
-        0%   { transform: translate(0,0) scale(1); opacity: 1; }
-        100% { opacity: 0; }
-      }
-      @keyframes modalFadeIn {
-        from { opacity: 0; }
-        to   { opacity: 1; }
-      }
-      @keyframes modalSlideUp {
-        from { transform: translateY(40px) scale(0.95); opacity: 0; }
-        to   { transform: translateY(0) scale(1); opacity: 1; }
-      }
-      .aura-info-btn {
-        animation: auraFloat 2.4s ease-in-out infinite, auraGlow 2.4s ease-in-out infinite;
-        cursor: pointer;
-        position: relative;
-      }
-      .aura-info-btn:hover {
-        animation: auraFloat 1.2s ease-in-out infinite, auraGlow 1.2s ease-in-out infinite;
-      }
-      .aura-info-ring {
-        position: absolute;
-        inset: -4px;
-        border-radius: 50%;
-        border: 2px solid rgba(139,92,246,0.35);
-        animation: auraRingPulse 2s ease-out infinite;
-        pointer-events: none;
-      }
-      .aura-particle {
-        position: absolute;
-        border-radius: 50%;
-        pointer-events: none;
-        animation: particleBurst 0.7s ease-out forwards;
-      }
-      .aura-modal-overlay {
-        animation: modalFadeIn 0.25s ease-out;
-      }
-      .aura-modal-card {
-        animation: modalSlideUp 0.35s cubic-bezier(0.16,1,0.3,1);
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    };
-  }, []);
-  return <></>;
 }
 
 interface CardProps {
@@ -255,7 +226,7 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
       <div
         className="aura-modal-card"
         style={{
-          width: "440px",
+          width: "480px",
           maxHeight: "88vh",
           borderRadius: "20px",
           overflow: "hidden",
@@ -300,7 +271,7 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
               e.currentTarget.style.background = "rgba(255,255,255,0.15)";
             }}
           >
-            &#x2715;
+            {"\u2715"}
           </button>
 
           <div
@@ -314,20 +285,17 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
               alignItems: "center",
               justifyContent: "center",
               fontSize: "28px",
+              fontWeight: 800,
+              color: "#fff",
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
-                fill="white"
-              />
-            </svg>
+            <AuraLogo size={40} />
           </div>
 
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>
+          <div style={{ fontSize: "24px", fontWeight: 800, color: "#fff", marginBottom: "6px", animation: "headerGlow 2s ease-in-out infinite alternate" }}>
             About AURA AI
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: "1.5" }}>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.8)", lineHeight: "1.5", letterSpacing: "0.02em" }}>
             AI-Powered Fashion, Infinite Possibilities
           </div>
         </div>
@@ -349,7 +317,8 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
             <div style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)", borderRadius: "12px", padding: "16px", fontSize: "13px", lineHeight: "1.7", color: "rgba(255,255,255,0.65)" }}>
               AURA AI is a cutting-edge virtual try-on platform that leverages generative AI to
               revolutionize the online fashion experience. Our technology enables users to upload
-              garments and instantly visualize how they look on diverse, realistic AI-generated models.
+              garments and instantly visualize how they look on diverse, realistic AI-generated models
+              from multiple angles with photorealistic quality.
             </div>
           </div>
 
@@ -359,13 +328,14 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               {[
-                { icon: "\uD83D\uDC57", title: "Virtual Try-On", bg: "rgba(139,92,246,0.12)", color: "#C4B5FD" },
-                { icon: "\uD83E\uDDE0", title: "AI Generation", bg: "rgba(59,130,246,0.12)", color: "#93C5FD" },
-                { icon: "\uD83C\uDF10", title: "Arab Models", bg: "rgba(16,185,129,0.12)", color: "#6EE7B7" },
-                { icon: "\u26A1", title: "Instant Results", bg: "rgba(245,158,11,0.12)", color: "#FCD34D" },
+                { icon: "\u{1F457}", title: "Virtual Try-On", bg: "rgba(139,92,246,0.12)", color: "#C4B5FD", delay: "0s" },
+                { icon: "\u{1F9E0}", title: "AI Generation", bg: "rgba(59,130,246,0.12)", color: "#93C5FD", delay: "0.05s" },
+                { icon: "\u{1F310}", title: "Arab Models", bg: "rgba(16,185,129,0.12)", color: "#6EE7B7", delay: "0.1s" },
+                { icon: "\u26A1", title: "Instant Results", bg: "rgba(245,158,11,0.12)", color: "#FCD34D", delay: "0.15s" },
               ].map((f) => (
                 <div
                   key={f.title}
+                  className="aura-feature-card"
                   style={{
                     background: f.bg,
                     borderRadius: "10px",
@@ -374,9 +344,10 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
                     alignItems: "center",
                     gap: "10px",
                     transition: "transform 0.2s ease",
+                    animationDelay: f.delay,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0) scale(1)"; }}
                 >
                   <span style={{ fontSize: "20px" }}>{f.icon}</span>
                   <span style={{ fontSize: "12px", fontWeight: 600, color: f.color }}>{f.title}</span>
@@ -387,34 +358,91 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
 
           <div style={{ background: "linear-gradient(135deg, rgba(30,15,59,0.9), rgba(43,20,76,0.9))", border: "1px solid rgba(139,92,246,0.2)", borderRadius: "14px", padding: "20px" }}>
             <div style={{ fontSize: "15px", fontWeight: 700, color: "#C4B5FD", marginBottom: "14px" }}>
-              Developers
+              {"\u{1F4BB}"} Development Team
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
-                { name: "Sondos AbuTeir", initials: "SA", color: "#A78BFA" },
-                { name: "Raghad Ibrahim", initials: "RI", color: "#818CF8" },
-                { name: "Reem Abu Shapap", initials: "RA", color: "#C084FC" },
+                { name: "Sondos AbuTeir", initials: "SA", color: "#A78BFA", role: "Lead Developer", delay: "0.1s" },
+                { name: "Raghad Ibrahim", initials: "RI", color: "#818CF8", role: "AI Engineer", delay: "0.2s" },
+                { name: "Reem Abu Shapap", initials: "RA", color: "#C084FC", role: "UI/UX Designer", delay: "0.3s" },
               ].map((dev) => (
                 <div
                   key={dev.name}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.04)" }}
+                  className="aura-dev-card"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 14px",
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(139,92,246,0.1)",
+                    transition: "all 0.2s ease",
+                    animationDelay: dev.delay,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(139,92,246,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)";
+                    e.currentTarget.style.transform = "translateX(4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    e.currentTarget.style.borderColor = "rgba(139,92,246,0.1)";
+                    e.currentTarget.style.transform = "translateX(0)";
+                  }}
                 >
                   <div
                     style={{
-                      width: "36px", height: "36px", borderRadius: "10px",
-                      background: `${dev.color}22`, border: `1px solid ${dev.color}44`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "12px", fontWeight: 700, color: dev.color, flexShrink: 0,
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "12px",
+                      background: `${dev.color}22`,
+                      border: `1px solid ${dev.color}44`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: dev.color,
+                      flexShrink: 0,
                     }}
                   >
                     {dev.initials}
                   </div>
-                  <span style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>
-                    {dev.name}
-                  </span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                      {dev.name}
+                    </div>
+                    <div style={{ fontSize: "11px", color: dev.color, fontWeight: 500, marginTop: 2 }}>
+                      {dev.role}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: dev.color,
+                      boxShadow: `0 0 8px ${dev.color}66`,
+                    }}
+                  />
                 </div>
               ))}
             </div>
+          </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              padding: "12px",
+              borderRadius: "10px",
+              background: "rgba(139,92,246,0.06)",
+              border: "1px solid rgba(139,92,246,0.1)",
+              fontSize: "12px",
+              color: "rgba(255,255,255,0.4)",
+            }}
+          >
+            AURA AI {"\u00B7"} Virtual Fashion Try-On Platform {"\u00B7"} 2024
           </div>
         </div>
       </div>
@@ -427,40 +455,6 @@ export default function Generation(): JSX.Element {
   const nav = useNavigate();
   const [selected, setSelected] = useState<ModelChoice | null>(null);
   const [showAbout, setShowAbout] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [exploding, setExploding] = useState(false);
-  const infoBtnRef = useRef<HTMLButtonElement>(null);
-
-  const triggerExplosion = useCallback(() => {
-    if (!infoBtnRef.current) return;
-    const rect = infoBtnRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-
-    const colors = [
-      "#8B5CF6", "#A78BFA", "#C4B5FD", "#6B46C1",
-      "#DDD6FE", "#E9D5FF", "#7C3AED", "#A855F7",
-    ];
-
-    const newParticles: Particle[] = Array.from({ length: 18 }, (_, i) => ({
-      id: i,
-      x: cx,
-      y: cy,
-      color: colors[i % colors.length],
-      size: Math.random() * 8 + 4,
-      angle: (Math.PI * 2 * i) / 18 + (Math.random() - 0.5) * 0.4,
-      speed: Math.random() * 60 + 40,
-    }));
-
-    setParticles(newParticles);
-    setExploding(true);
-
-    setTimeout(() => {
-      setParticles([]);
-      setExploding(false);
-      setShowAbout(true);
-    }, 600);
-  }, []);
 
   const cards = useMemo<CardDef[]>(
     () => [
@@ -486,7 +480,7 @@ export default function Generation(): JSX.Element {
         title: "Choose from AURA Models",
         desc: "Select from a curated collection of professional Arab full-body models.",
         meta: "Professional models",
-        metaIcon: "\uD83D\uDC65",
+        metaIcon: "\u{1F465}",
       },
     ],
     []
@@ -495,10 +489,17 @@ export default function Generation(): JSX.Element {
   const handleContinue = (): void => {
     if (!selected) return;
 
-    // Navigate to Upload Garment page with the selected model type
-    nav("/app/upload-garment", {
-      state: { selected },
-    });
+    if (selected === "aura") {
+      // AURA Models → go to model selection page first
+      nav("/app/aura-models", {
+        state: { selected },
+      });
+    } else {
+      // Upload Your Model / Generate AI Model → go to Upload Garment page
+      nav("/app/upload-garment", {
+        state: { selected },
+      });
+    }
   };
 
   return (
@@ -535,60 +536,22 @@ export default function Generation(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #6B46C1, #8B5CF6)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "#fff",
-              flexShrink: 0,
-            }}
-          >
-            A
+          {/* ── ANIMATED AURA LOGO with all effects ── */}
+          <AuraLogo
+            size={44}
+            onClick={() => setShowAbout(true)}
+          />
+          <div>
+            <span style={{ fontWeight: 600, fontSize: "18px", color: "#fff" }}>
+              AURA AI
+            </span>
+            <div style={{ fontSize: "10px", color: "rgba(198,166,247,0.6)", letterSpacing: "0.04em" }}>
+              Virtual Fashion
+            </div>
           </div>
-          <span style={{ fontWeight: 600, fontSize: "18px", color: "#fff" }}>
-            AURA AI
-          </span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {/* ── ANIMATED INFO ICON ── */}
-          <button
-            ref={infoBtnRef}
-            className="aura-info-btn"
-            onClick={triggerExplosion}
-            style={{
-              width: "38px",
-              height: "38px",
-              borderRadius: "50%",
-              border: "none",
-              background: exploding
-                ? "rgba(139,92,246,0.35)"
-                : "linear-gradient(135deg, #6B46C1, #8B5CF6)",
-              color: "#fff",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              outline: "none",
-            }}
-          >
-            {!exploding && <span className="aura-info-ring" />}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
-                fill="white"
-              />
-            </svg>
-          </button>
-
           {/* Profile button */}
           <button
             onClick={() => nav("/app/profile")}
@@ -614,31 +577,10 @@ export default function Generation(): JSX.Element {
               e.currentTarget.style.boxShadow = "0 0 10px rgba(139, 92, 246, 0.3)";
             }}
           >
-            &#x1F464;
+            {"\u{1F464}"}
           </button>
         </div>
       </header>
-
-      {/* ── EXPLOSION PARTICLES ── */}
-      {particles.length > 0 &&
-        particles.map((p) => (
-          <div
-            key={p.id}
-            className="aura-particle"
-            style={{
-              position: "fixed",
-              left: p.x,
-              top: p.y,
-              width: p.size,
-              height: p.size,
-              background: p.color,
-              borderRadius: "50%",
-              transform: `translate(${Math.cos(p.angle) * p.speed}px, ${Math.sin(p.angle) * p.speed}px)`,
-              zIndex: 10002,
-              pointerEvents: "none",
-            }}
-          />
-        ))}
 
       {/* ── ABOUT MODAL ── */}
       <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />

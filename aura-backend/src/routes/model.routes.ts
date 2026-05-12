@@ -1,5 +1,5 @@
 import { Router } from "express";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import Generation from "../models/Generation";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 
@@ -25,9 +25,32 @@ router.post("/generate", requireAuth, async (req: AuthRequest, res) => {
       bodyType,
       clothingStyle,
       pose,
+      garmentImage, // optional base64 garment image from Upload Garment page
     } = req.body;
 
-    const finalPrompt = `
+    const hasGarment = typeof garmentImage === "string" && garmentImage.length > 0;
+
+    const finalPrompt = hasGarment
+      ? `
+Create a realistic full-body fashion model wearing the provided garment for a virtual try-on fashion app.
+
+Model details:
+- Gender: ${gender}
+- Age range: ${ageRange}
+- Ethnicity: ${ethnicity}
+- Body type: ${bodyType}
+- Clothing style: ${clothingStyle}
+- Pose: ${pose}
+
+User description:
+${prompt}
+
+IMPORTANT: The model MUST be wearing the exact garment shown in the reference image. Preserve the garment's design, color, pattern, and details precisely. Dress the model in this garment naturally and realistically.
+
+Style:
+Photorealistic, professional studio lighting, full body visible, clean background, fashion e-commerce quality, high detail.
+`
+      : `
 Create a realistic full-body fashion model for a virtual try-on fashion app.
 
 Model details:
@@ -45,15 +68,39 @@ Style:
 Photorealistic, professional studio lighting, full body visible, clean background, fashion e-commerce quality, high detail.
 `;
 
-    const result = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt: finalPrompt,
-      size: "1024x1536",
-      quality: "high",
-      n: 1,
-    });
+    let imageBase64: string | undefined;
 
-    const imageBase64 = result.data?.[0]?.b64_json;
+    if (hasGarment) {
+      // ── Garment provided: use openai.images.edit() with garment as input ──
+      // Strip data URL prefix if present (e.g. "data:image/png;base64,")
+      const base64Raw = garmentImage.replace(/^data:[^;]+;base64,/, "");
+      const buffer = Buffer.from(base64Raw, "base64");
+
+      const garmentFile = await toFile(buffer, "garment.png", {
+        type: "image/png",
+      });
+
+      const result = await openai.images.edit({
+        model: "gpt-image-1",
+        image: [garmentFile],
+        prompt: finalPrompt,
+        size: "1024x1536",
+        quality: "high",
+      });
+
+      imageBase64 = result.data?.[0]?.b64_json;
+    } else {
+      // ── No garment: text-to-image generation ──
+      const result = await openai.images.generate({
+        model: "gpt-image-1",
+        prompt: finalPrompt,
+        size: "1024x1536",
+        quality: "high",
+        n: 1,
+      });
+
+      imageBase64 = result.data?.[0]?.b64_json;
+    }
 
     if (!imageBase64) {
       return res.status(500).json({
@@ -61,10 +108,12 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
       });
     }
 
+    const method = hasGarment ? "AI Generation + Garment" : "AI Generation";
+
     const saved = await Generation.create({
       userId: req.userId,
       title: `${gender} ${ethnicity} Model`,
-      method: "AI Generation",
+      method,
       imageBase64,
       mimeType: "image/png",
       prompt: finalPrompt,
