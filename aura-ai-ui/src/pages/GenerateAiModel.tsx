@@ -77,6 +77,7 @@ export default function GenerateAiModel(): JSX.Element {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [showResultButton, setShowResultButton] = useState(false);
   const ageRangeOptions = [
     "18 - 21 years",
     "20 - 25 years",
@@ -133,6 +134,7 @@ export default function GenerateAiModel(): JSX.Element {
 
       const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
       setGeneratedImage(imageUrl);
+      setShowResultButton(true);
 
       const newModel: HistoryItem = {
         title: `${gender} ${ethnicity} Model`,
@@ -261,8 +263,8 @@ export default function GenerateAiModel(): JSX.Element {
           overflow: "hidden",
         }}
       >
-        {/* LEFT SIDEBAR - Generation Flow with Step 3 glowing */}
-        <GenerationFlow activeStep={3} />
+        {/* LEFT SIDEBAR - Generation Flow with dynamic step */}
+        <GenerationFlow activeStep={showResultButton ? 4 : 3} />
 
         {/* CENTER - MAIN CONTENT */}
         <main
@@ -593,21 +595,23 @@ export default function GenerateAiModel(): JSX.Element {
                         height: "100%",
                         objectFit: "contain",
                         borderRadius: 12,
-                        maxHeight: "500px",
+                        maxHeight: "400px",
                       }}
                     />
                     <div
                       style={{
                         display: "flex",
-                        gap: 12,
+                        gap: 10,
                         marginTop: 16,
+                        flexWrap: "wrap",
+                        justifyContent: "center",
                       }}
                     >
                       <button
                         onClick={handleDownload}
                         style={{
                           height: 44,
-                          padding: "0 24px",
+                          padding: "0 20px",
                           borderRadius: 10,
                           border: "1px solid rgba(198,166,247,0.3)",
                           background: "rgba(198,166,247,0.15)",
@@ -632,6 +636,46 @@ export default function GenerateAiModel(): JSX.Element {
                       >
                         ⬇ Download
                       </button>
+                      {showResultButton && (
+                        <button
+                          onClick={() =>
+                            nav("/app/generation-result", {
+                              state: {
+                                generatedImage,
+                                method: "AI Generation",
+                                title: `${gender} ${ethnicity} Model`,
+                              },
+                            })
+                          }
+                          style={{
+                            height: 44,
+                            padding: "0 24px",
+                            borderRadius: 10,
+                            border: "none",
+                            background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
+                            color: "#fff",
+                            cursor: "pointer",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            fontFamily: FONTS.primary,
+                            boxShadow: "0 4px 20px rgba(198,166,247,0.3)",
+                            transition: "all 0.3s ease",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "0 8px 32px rgba(198,166,247,0.45)";
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "0 4px 20px rgba(198,166,247,0.3)";
+                            e.currentTarget.style.transform = "translateY(0)";
+                          }}
+                        >
+                          🎉 View Full Results
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (

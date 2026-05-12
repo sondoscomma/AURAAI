@@ -38,15 +38,74 @@ export default function ProfileSettings(): JSX.Element {
         const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/history", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!res.ok) {
-          setHistory([]);
-          return;
+
+        let serverHistory: UsedModel[] = [];
+        if (res.ok) {
+          const data = await res.json();
+          serverHistory = data;
         }
 
-        const data = await res.json();
-        setHistory(data);
+        // Also load locally saved generation history
+        let localHistory: UsedModel[] = [];
+        try {
+          const localRaw = localStorage.getItem("aura_generation_history");
+          if (localRaw) {
+            const localData = JSON.parse(localRaw);
+            localHistory = localData.map((entry: { id?: string; image?: string; method?: string; title?: string; createdAt?: string; type?: string }) => ({
+              _id: entry.id,
+              title: entry.title || "Untitled",
+              method: entry.method || "Unknown",
+              imageBase64: entry.image?.replace(/^data:[^;]+;base64,/, "") || undefined,
+              mimeType: entry.image?.startsWith("data:image/png") ? "image/png" : entry.image?.startsWith("data:image/jpeg") ? "image/jpeg" : "image/png",
+              createdAt: entry.createdAt,
+            }));
+          }
+        } catch {
+          // Silently fail
+        }
+
+        // Merge: avoid duplicates by ID/time, local items first
+        const seenIds = new Set<string>();
+        const merged: UsedModel[] = [];
+
+        for (const item of localHistory) {
+          const key = item._id || item.createdAt || Math.random().toString();
+          if (!seenIds.has(key)) {
+            seenIds.add(key);
+            merged.push(item);
+          }
+        }
+
+        for (const item of serverHistory) {
+          const key = item._id || item.createdAt || Math.random().toString();
+          if (!seenIds.has(key)) {
+            seenIds.add(key);
+            merged.push(item);
+          }
+        }
+
+        setHistory(merged);
       } catch {
-        setHistory([]);
+        // Try loading just local history as fallback
+        try {
+          const localRaw = localStorage.getItem("aura_generation_history");
+          if (localRaw) {
+            const localData = JSON.parse(localRaw);
+            const localHistory: UsedModel[] = localData.map((entry: { id?: string; image?: string; method?: string; title?: string; createdAt?: string; type?: string }) => ({
+              _id: entry.id,
+              title: entry.title || "Untitled",
+              method: entry.method || "Unknown",
+              imageBase64: entry.image?.replace(/^data:[^;]+;base64,/, "") || undefined,
+              mimeType: entry.image?.startsWith("data:image/png") ? "image/png" : entry.image?.startsWith("data:image/jpeg") ? "image/jpeg" : "image/png",
+              createdAt: entry.createdAt,
+            }));
+            setHistory(localHistory);
+          } else {
+            setHistory([]);
+          }
+        } catch {
+          setHistory([]);
+        }
       }
     }
 
