@@ -109,6 +109,8 @@ const models: AuraModel[] = [
   },
 ];
 
+const VALID_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export default function AuraModels(): JSX.Element {
   const nav = useNavigate();
   const [activeFilter, setActiveFilter] = useState<Filter>("All Models");
@@ -140,7 +142,7 @@ export default function AuraModels(): JSX.Element {
   const handleGarmentFile = (files: FileList | null): void => {
     if (!files || files.length === 0) return;
     const file = files[0];
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return;
+    if (!VALID_TYPES.includes(file.type)) return;
     setGarmentFile(file);
     setGarmentPreview(URL.createObjectURL(file));
   };
@@ -162,7 +164,6 @@ export default function AuraModels(): JSX.Element {
     e.stopPropagation();
     setGarmentDragging(false);
     handleGarmentFile(e.dataTransfer.files);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const removeGarment = (): void => {
@@ -183,7 +184,6 @@ export default function AuraModels(): JSX.Element {
       // Fallback: use canvas approach if fetch fails (e.g. data URLs)
       return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = "anonymous";
         img.onload = () => {
           const canvas = document.createElement("canvas");
           canvas.width = img.naturalWidth;
@@ -226,7 +226,7 @@ export default function AuraModels(): JSX.Element {
       const generateView = async (prompt: string): Promise<string> => {
         const formData = new FormData();
         formData.append("images", modelBlob, "model.png");
-        formData.append("images", garmentFile, "garment.png");
+        formData.append("images", garmentFile!, "garment.png");
         formData.append("prompt", prompt);
 
         const data = await fetchGeneration("/api/tryon/generate", {
@@ -245,7 +245,6 @@ export default function AuraModels(): JSX.Element {
       const frontImageUrl = await generateView(`${basePrompt}, front view facing camera`);
       const rightImageUrl = await generateView(`${basePrompt}, right side profile view, turned 90 degrees to the right`);
 
-      // Validate both images were generated successfully
       if (!frontImageUrl || !rightImageUrl) {
         throw new Error("One or both views failed to generate");
       }

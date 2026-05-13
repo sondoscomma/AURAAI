@@ -3,7 +3,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
-import SafeImage, { isValidBase64Image } from "../components/SafeImage";
+import SafeImage from "../components/SafeImage";
 import { storeImage } from "../utils/imageStore";
 import { fetchGeneration, validateAndBuildImageUrl } from "../utils/apiClient";
 
@@ -140,10 +140,10 @@ export default function UploadYourModel(): JSX.Element {
 
   // ─── Generate a single view ───
   async function generateView(
-    viewPrompt: string,
-    viewLabel: "front" | "right"
+    viewPrompt: string
   ): Promise<string> {
     const formData = new FormData();
+    // Backend expects field name "images" with at least 2 files
     formData.append("images", personFile!);
     formData.append("images", garmentFile!);
     formData.append("prompt", viewPrompt);
@@ -153,10 +153,12 @@ export default function UploadYourModel(): JSX.Element {
     const data = await fetchGeneration("/api/tryon/generate", {
       method: "POST",
       body: formData,
+      // Note: Do NOT set Content-Type header — browser sets it automatically
+      // with the correct multipart/form-data boundary for FormData
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
-    return validateAndBuildImageUrl(data as Record<string, unknown>, viewLabel);
+    return validateAndBuildImageUrl(data as Record<string, unknown>);
   }
 
   // ─── Generate both views ───
@@ -180,15 +182,12 @@ export default function UploadYourModel(): JSX.Element {
         "Create a realistic virtual try-on image showing the RIGHT SIDE profile view. Use the person from the uploaded images and dress them with the clothing from the reference images. The model must face to the right, showing the right side profile of the outfit. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
       // Generate views sequentially to avoid API overload/corruption
-      const front = await generateView(frontPrompt, "front");
-      const right = await generateView(rightPrompt, "right");
-
-      if (!isValidBase64Image(front) || !isValidBase64Image(right)) {
-        throw new Error("Generated image data is invalid or corrupted");
-      }
-
+      const front = await generateView(frontPrompt);
       setFrontImage(front);
+
+      const right = await generateView(rightPrompt);
       setRightImage(right);
+
       setShowResultButton(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Try-on generation failed.");

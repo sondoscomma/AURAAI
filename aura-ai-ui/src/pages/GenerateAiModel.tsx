@@ -177,6 +177,8 @@ export default function GenerateAiModel(): JSX.Element {
         return;
       }
 
+      const hasGarment = !!garmentBase64;
+
       // Build the request body — include garment image (base64) if available
       const baseRequestBody = {
         gender,
@@ -187,11 +189,11 @@ export default function GenerateAiModel(): JSX.Element {
         pose,
         // Send the garment base64 image to the backend — it will use
         // openai.images.edit() with the garment as a reference when present
-        ...(garmentBase64 ? { garmentImage: garmentBase64 } : {}),
+        ...(hasGarment ? { garmentImage: garmentBase64 } : {}),
       };
 
       // Generate front view
-      const frontPrompt = garmentBase64
+      const frontPrompt = hasGarment
         ? `${prompt}, front view facing camera, full body shot, wearing the uploaded garment`
         : `${prompt}, front view facing camera, full body shot`;
       const frontData = await fetchGeneration("/api/models/generate", {
@@ -210,7 +212,7 @@ export default function GenerateAiModel(): JSX.Element {
       setGeneratedImage(frontImageUrl);
 
       // Generate right view
-      const rightPrompt = garmentBase64
+      const rightPrompt = hasGarment
         ? `${prompt}, right side profile view, full body shot turned 90 degrees to the right, wearing the uploaded garment`
         : `${prompt}, right side profile view, full body shot turned 90 degrees to the right`;
       const rightData = await fetchGeneration("/api/models/generate", {
@@ -871,7 +873,7 @@ export default function GenerateAiModel(): JSX.Element {
                                   justifyContent: "center",
                                 }}
                               >
-                                \u2715
+                                ✕
                               </button>
                             </div>
                           ) : (
