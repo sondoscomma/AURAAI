@@ -118,9 +118,9 @@ export default function AuraModels(): JSX.Element {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
-  const [groupId, setGroupId] = useState<string | null>(null);
-  const [frontImageId, setFrontImageId] = useState<string | null>(null);
-  const [rightImageId, setRightImageId] = useState<string | null>(null);
+  const [, setGroupId] = useState<string | null>(null);
+  const [, setFrontImageId] = useState<string | null>(null);
+  const [, setRightImageId] = useState<string | null>(null);
 
   // Garment upload state
   const garmentInputRef = useRef<HTMLInputElement>(null);

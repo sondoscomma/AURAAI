@@ -86,7 +86,6 @@ export default function TryOnResult(): JSX.Element {
   // Generation IDs from backend for cloud sync
   const frontImageId = state?.frontImageId || null;
   const rightImageId = state?.rightImageId || null;
-  const stateGroupId = state?.groupId || null;
 
   // Get current user for scoped storage
   const currentUser = getUser();
