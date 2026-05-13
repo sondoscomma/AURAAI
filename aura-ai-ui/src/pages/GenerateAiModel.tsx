@@ -93,6 +93,9 @@ export default function GenerateAiModel(): JSX.Element {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [frontImageId, setFrontImageId] = useState<string | null>(null);
+  const [rightImageId, setRightImageId] = useState<string | null>(null);
 
   // Built-in garment upload + base64 tracking for API calls
   const garmentInputRef = useRef<HTMLInputElement>(null);
@@ -169,13 +172,8 @@ export default function GenerateAiModel(): JSX.Element {
       setIsGenerating(true);
       setError("");
 
+      // Token is optional — backend supports both authenticated and guest users
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        setError("Please login first.");
-        nav("/login");
-        return;
-      }
 
       const hasGarment = !!garmentBase64;
 
@@ -192,24 +190,34 @@ export default function GenerateAiModel(): JSX.Element {
         ...(hasGarment ? { garmentImage: garmentBase64 } : {}),
       };
 
+      // Build headers — include Authorization only if token is present
+      const authHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        authHeaders["Authorization"] = `Bearer ${token}`;
+      }
+
       // Generate front view
       const frontPrompt = hasGarment
         ? `${prompt}, front view facing camera, full body shot, wearing the uploaded garment`
         : `${prompt}, front view facing camera, full body shot`;
       const frontData = await fetchGeneration("/api/models/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
         body: JSON.stringify({
           ...baseRequestBody,
           prompt: frontPrompt,
+          direction: "front",
         }),
       });
       const frontImageUrl = validateAndBuildImageUrl(frontData as Record<string, unknown>, "front view");
+      const frontId = (frontData as Record<string, unknown>).imageId as string;
+      const gId = (frontData as Record<string, unknown>).groupId as string;
       setFrontImage(frontImageUrl);
+      setFrontImageId(frontId);
       setGeneratedImage(frontImageUrl);
+      setGroupId(gId);
 
       // Generate right view
       const rightPrompt = hasGarment
@@ -217,17 +225,18 @@ export default function GenerateAiModel(): JSX.Element {
         : `${prompt}, right side profile view, full body shot turned 90 degrees to the right`;
       const rightData = await fetchGeneration("/api/models/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
         body: JSON.stringify({
           ...baseRequestBody,
           prompt: rightPrompt,
+          direction: "right",
+          groupId: gId,
         }),
       });
       const rightImageUrl = validateAndBuildImageUrl(rightData as Record<string, unknown>, "right view");
+      const rightId = (rightData as Record<string, unknown>).imageId as string;
       setRightImage(rightImageUrl);
+      setRightImageId(rightId);
 
       setShowResultButton(true);
 
@@ -748,6 +757,10 @@ export default function GenerateAiModel(): JSX.Element {
                                 rightImageKey,
                                 method: "AI Generation",
                                 title: `${gender} ${ethnicity} Model`,
+                                // Pass generation IDs so result page can fetch from backend
+                                frontImageId,
+                                rightImageId,
+                                groupId,
                               },
                             });
                           }}

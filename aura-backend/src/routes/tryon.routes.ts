@@ -2,30 +2,22 @@ import { Router } from "express";
 import multer from "multer";
 import OpenAI, { toFile } from "openai";
 import Generation from "../models/Generation";
+import { requireAuth, type AuthRequest } from "../middleware/auth";
+import { buildImageUrl } from "../utils/buildImageUrl";
+import { tryonPromptSchema, validateBody } from "../utils/validation";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-/**
- * Build the full image URL for a generation ID.
- * Uses BASE_URL env variable if set (recommended for production behind proxies).
- * Falls back to req.protocol + req.get('host').
- */
-function buildImageUrl(req: any, generationId: any): string {
-  const baseUrl = process.env.BASE_URL;
-  if (baseUrl) {
-    return `${baseUrl}/api/images/${generationId}`;
-  }
-  const protocol = req.protocol;
-  const host = req.get("host");
-  return `${protocol}://${host}/api/images/${generationId}`;
-}
-
-router.post("/generate", upload.array("images", 16), async (req, res) => {
+router.post("/generate", requireAuth, upload.array("images", 16), async (req: AuthRequest, res) => {
   try {
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        message: "Server configuration error: Missing API key",
+      });
+    }
 
     const files = req.files as Express.Multer.File[];
 
@@ -35,6 +27,20 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
       });
     }
 
+    // Validate prompt if provided
+    const parsed = validateBody(tryonPromptSchema, req.body);
+    const customPrompt = parsed.prompt;
+
+    const prompt = customPrompt?.trim()
+      ? customPrompt
+      : "Create a realistic virtual try-on image. Use the person from the uploaded images and dress them with the clothing from the reference images. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
+
+    // Optional: direction and groupId for linking multi-view generations
+    const direction = (req.body.direction === "front" || req.body.direction === "right") ? req.body.direction : null;
+    const groupId = typeof req.body.groupId === "string" && req.body.groupId.length > 0 ? req.body.groupId : null;
+
+    const openai = new OpenAI({ apiKey });
+
     const imageFiles = await Promise.all(
       files.map((file) =>
         toFile(file.buffer, file.originalname, {
@@ -42,12 +48,6 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
         })
       )
     );
-
-    // Allow custom prompt from frontend, or use the default
-    const customPrompt = req.body.prompt as string | undefined;
-    const prompt = customPrompt?.trim()
-      ? customPrompt
-      : "Create a realistic virtual try-on image. Use the person from the uploaded images and dress them with the clothing from the reference images. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
     const result = await openai.images.edit({
       model: "gpt-image-1",
@@ -63,29 +63,38 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
       return res.status(500).json({ message: "No image generated." });
     }
 
-    // Store in MongoDB and return URL instead of raw base64
+    // Store in MongoDB with userId so the generation has an owner
     const saved = await Generation.create({
+      userId: req.userId,
       title: "Virtual Try-On",
       method: "Try-On",
       imageBase64,
       mimeType: "image/png",
       prompt,
+      direction,
+      groupId,
     });
 
-    // Build the image URL — uses BASE_URL env or falls back to request headers
-    const imageUrl = buildImageUrl(req, saved._id);
+    const imageUrl = buildImageUrl(req, saved._id.toString());
 
     res.json({
+      id: saved._id,
+      title: saved.title,
+      method: saved.method,
       imageUrl,
       imageId: saved._id.toString(),
       mimeType: "image/png",
+      createdAt: saved.createdAt,
+      direction,
+      groupId,
     });
   } catch (error: any) {
     console.error("Try-on error:", error);
 
-    res.status(error?.status || 500).json({
-      message: error?.message || "Try-on generation failed.",
-    });
+    const status = error?.status || 500;
+    const message = error?.message || "Try-on generation failed.";
+
+    res.status(status).json({ message });
   }
 });
 

@@ -58,6 +58,11 @@ export default function TryOnResult(): JSX.Element {
     rightImageKey?: string;
     personPreviewKey?: string;
     garmentPreviewKey?: string;
+    frontImageId?: string;
+    rightImageId?: string;
+    groupId?: string;
+    method?: string;
+    title?: string;
     // Legacy support: direct image data
     resultImage?: string;
     frontImage?: string;
@@ -71,12 +76,17 @@ export default function TryOnResult(): JSX.Element {
   const personPreview = getImage(state?.personPreviewKey) || state?.personPreview || null;
   const garmentPreview = getImage(state?.garmentPreviewKey) || state?.garmentPreview || null;
 
-  // Validate the result images
+  // Validate the result images (accepts both HTTP URLs from DB and base64 data URLs)
   const validResultImage = isValidBase64Image(resultImage) ? resultImage : null;
   const frontImageData = getImage(state?.frontImageKey) || state?.frontImage || null;
   const rightImageData = getImage(state?.rightImageKey) || state?.rightImage || null;
   const validFrontImage = frontImageData && isValidBase64Image(frontImageData) ? frontImageData : null;
   const validRightImage = rightImageData && isValidBase64Image(rightImageData) ? rightImageData : null;
+
+  // Generation IDs from backend for cloud sync
+  const frontImageId = state?.frontImageId || null;
+  const rightImageId = state?.rightImageId || null;
+  const stateGroupId = state?.groupId || null;
 
   // Get current user for scoped storage
   const currentUser = getUser();
@@ -112,6 +122,12 @@ export default function TryOnResult(): JSX.Element {
   // ─── Save to backend for the logged-in user ───
   const saveToBackend = useCallback(async (): Promise<void> => {
     if (!validResultImage || backendSaveStatus === "success") return;
+
+    // If we have generation IDs from the backend, the images are already saved in DB
+    if (frontImageId || rightImageId) {
+      setBackendSaveStatus("success");
+      return;
+    }
 
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -153,7 +169,7 @@ export default function TryOnResult(): JSX.Element {
     } finally {
       setSavingToBackend(false);
     }
-  }, [validResultImage, backendSaveStatus]);
+  }, [validResultImage, frontImageId, rightImageId, backendSaveStatus]);
 
   // Auto-save to backend when image arrives
   useEffect(() => {

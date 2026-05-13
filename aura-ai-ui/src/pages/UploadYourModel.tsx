@@ -28,6 +28,9 @@ export default function UploadYourModel(): JSX.Element {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [frontImageId, setFrontImageId] = useState<string | null>(null);
+  const [rightImageId, setRightImageId] = useState<string | null>(null);
 
   // Save to history when both results are generated
   useEffect(() => {
@@ -140,13 +143,19 @@ export default function UploadYourModel(): JSX.Element {
 
   // ─── Generate a single view ───
   async function generateView(
-    viewPrompt: string
-  ): Promise<string> {
+    viewPrompt: string,
+    direction: "front" | "right",
+    currentGroupId: string | null
+  ): Promise<{ imageUrl: string; imageId: string; groupId: string }> {
     const formData = new FormData();
     // Backend expects field name "images" with at least 2 files
     formData.append("images", personFile!);
     formData.append("images", garmentFile!);
     formData.append("prompt", viewPrompt);
+    formData.append("direction", direction);
+    if (currentGroupId) {
+      formData.append("groupId", currentGroupId);
+    }
 
     const token = localStorage.getItem("token");
 
@@ -158,7 +167,12 @@ export default function UploadYourModel(): JSX.Element {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
-    return validateAndBuildImageUrl(data as Record<string, unknown>);
+    const imageUrl = validateAndBuildImageUrl(data as Record<string, unknown>);
+    return {
+      imageUrl,
+      imageId: (data as Record<string, unknown>).imageId as string,
+      groupId: (data as Record<string, unknown>).groupId as string,
+    };
   }
 
   // ─── Generate both views ───
@@ -174,6 +188,9 @@ export default function UploadYourModel(): JSX.Element {
       setFrontImage(null);
       setRightImage(null);
       setShowResultButton(false);
+      setGroupId(null);
+      setFrontImageId(null);
+      setRightImageId(null);
 
       const frontPrompt =
         "Create a realistic virtual try-on image showing the FRONT view. Use the person from the uploaded images and dress them with the clothing from the reference images. The model must face the camera directly, showing the full front of the outfit. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
@@ -182,11 +199,14 @@ export default function UploadYourModel(): JSX.Element {
         "Create a realistic virtual try-on image showing the RIGHT SIDE profile view. Use the person from the uploaded images and dress them with the clothing from the reference images. The model must face to the right, showing the right side profile of the outfit. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
       // Generate views sequentially to avoid API overload/corruption
-      const front = await generateView(frontPrompt);
-      setFrontImage(front);
+      const front = await generateView(frontPrompt, "front", null);
+      setFrontImage(front.imageUrl);
+      setFrontImageId(front.imageId);
+      setGroupId(front.groupId);
 
-      const right = await generateView(rightPrompt);
-      setRightImage(right);
+      const right = await generateView(rightPrompt, "right", front.groupId);
+      setRightImage(right.imageUrl);
+      setRightImageId(right.imageId);
 
       setShowResultButton(true);
     } catch (err) {
@@ -971,6 +991,12 @@ export default function UploadYourModel(): JSX.Element {
                             rightImageKey,
                             personPreviewKey,
                             garmentPreviewKey,
+                            // Pass generation IDs so result page can fetch from backend
+                            frontImageId,
+                            rightImageId,
+                            groupId,
+                            method: "Try-On",
+                            title: "Virtual Try-On Result",
                           },
                         });
                       }}

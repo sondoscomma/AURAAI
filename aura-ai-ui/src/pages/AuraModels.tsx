@@ -118,6 +118,9 @@ export default function AuraModels(): JSX.Element {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [frontImageId, setFrontImageId] = useState<string | null>(null);
+  const [rightImageId, setRightImageId] = useState<string | null>(null);
 
   // Garment upload state
   const garmentInputRef = useRef<HTMLInputElement>(null);
@@ -209,12 +212,8 @@ export default function AuraModels(): JSX.Element {
       setIsGenerating(true);
       setError("");
 
+      // Token is optional — backend supports both authenticated and guest users
       const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Please login first.");
-        nav("/login");
-        return;
-      }
 
       const model = models.find((m) => m.name === selectedModel);
       if (!model) return;
@@ -223,36 +222,48 @@ export default function AuraModels(): JSX.Element {
       const modelBlob = await imageURLtoBlob(model.image);
 
       // Helper: generate one view via tryon API
-      const generateView = async (prompt: string): Promise<string> => {
+      const generateView = async (prompt: string, direction: "front" | "right", currentGroupId: string | null): Promise<{ imageUrl: string; imageId: string; groupId: string }> => {
         const formData = new FormData();
         formData.append("images", modelBlob, "model.png");
         formData.append("images", garmentFile!, "garment.png");
         formData.append("prompt", prompt);
+        formData.append("direction", direction);
+        if (currentGroupId) {
+          formData.append("groupId", currentGroupId);
+        }
 
         const data = await fetchGeneration("/api/tryon/generate", {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData,
         });
 
-        return validateAndBuildImageUrl(data as Record<string, unknown>);
+        return {
+          imageUrl: validateAndBuildImageUrl(data as Record<string, unknown>),
+          imageId: (data as Record<string, unknown>).imageId as string,
+          groupId: (data as Record<string, unknown>).groupId as string,
+        };
       };
 
       // Build prompt context from model attributes
       const basePrompt = `Create a realistic virtual try-on image. Dress the ${model.gender.toLowerCase()} person with the uploaded clothing. Professional ${model.tags.join(", ").toLowerCase()} style, ${model.height} tall, ${model.skin.toLowerCase()} skin, photorealistic, studio lighting, full body shot`;
 
       // Generate both views sequentially to avoid API overload/corruption
-      const frontImageUrl = await generateView(`${basePrompt}, front view facing camera`);
-      const rightImageUrl = await generateView(`${basePrompt}, right side profile view, turned 90 degrees to the right`);
+      const front = await generateView(`${basePrompt}, front view facing camera`, "front", null);
+      const right = await generateView(`${basePrompt}, right side profile view, turned 90 degrees to the right`, "right", front.groupId);
 
-      if (!frontImageUrl || !rightImageUrl) {
+      if (!front.imageUrl || !right.imageUrl) {
         throw new Error("One or both views failed to generate");
       }
 
+      setGroupId(front.groupId);
+      setFrontImageId(front.imageId);
+      setRightImageId(right.imageId);
+
       // Store images in memory and pass only keys via router state
       // (avoids corruption from browser History API size limits)
-      const frontImageKey = storeImage(frontImageUrl);
-      const rightImageKey = storeImage(rightImageUrl);
+      const frontImageKey = storeImage(front.imageUrl);
+      const rightImageKey = storeImage(right.imageUrl);
       const garmentPreviewKey = garmentPreview ? storeImage(garmentPreview) : null;
       const modelPreviewKey = model.image ? storeImage(model.image) : null;
 
@@ -264,6 +275,10 @@ export default function AuraModels(): JSX.Element {
           modelName: model.name,
           garmentPreviewKey,
           modelPreviewKey,
+          // Pass generation IDs so result page can fetch from backend
+          frontImageId: front.imageId,
+          rightImageId: right.imageId,
+          groupId: front.groupId,
         },
       });
     } catch (err) {

@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import SafeImage from "../components/SafeImage";
 
 type Tab = "profile" | "history";
 
@@ -9,8 +10,11 @@ type UsedModel = {
   title: string;
   method: string;
   imageBase64?: string;
+  imageUrl?: string;
   mimeType?: string;
   createdAt?: string;
+  direction?: string | null;
+  groupId?: string | null;
 };
 
 export default function ProfileSettings(): JSX.Element {
@@ -42,7 +46,18 @@ export default function ProfileSettings(): JSX.Element {
         let serverHistory: UsedModel[] = [];
         if (res.ok) {
           const data = await res.json();
-          serverHistory = data;
+          // Backend returns { data: [...], page, limit, total, totalPages }
+          const items = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+          serverHistory = items.map((item: any) => ({
+            _id: item._id,
+            title: item.title || "Untitled",
+            method: item.method || "Unknown",
+            imageUrl: item.imageUrl, // HTTP URL served from DB via /api/images/:id
+            mimeType: item.mimeType || "image/png",
+            direction: item.direction || null,
+            groupId: item.groupId || null,
+            createdAt: item.createdAt,
+          }));
         }
 
         // Also load locally saved generation history
@@ -55,7 +70,9 @@ export default function ProfileSettings(): JSX.Element {
               _id: entry.id,
               title: entry.title || "Untitled",
               method: entry.method || "Unknown",
-              imageBase64: entry.image?.replace(/^data:[^;]+;base64,/, "") || undefined,
+              // Local entries may have HTTP URLs or data URLs
+              imageUrl: entry.image?.startsWith("http") ? entry.image : undefined,
+              imageBase64: entry.image?.startsWith("data:") ? entry.image.replace(/^data:[^;]+;base64,/, "") : (entry.image && !entry.image.startsWith("http") ? entry.image : undefined),
               mimeType: entry.image?.startsWith("data:image/png") ? "image/png" : entry.image?.startsWith("data:image/jpeg") ? "image/jpeg" : "image/png",
               createdAt: entry.createdAt,
             }));
@@ -64,11 +81,12 @@ export default function ProfileSettings(): JSX.Element {
           // Silently fail
         }
 
-        // Merge: avoid duplicates by ID/time, local items first
+        // Merge: avoid duplicates by ID/time, server items first (they have proper imageUrl)
         const seenIds = new Set<string>();
         const merged: UsedModel[] = [];
 
-        for (const item of localHistory) {
+        // Server history takes priority (has imageUrl from DB)
+        for (const item of serverHistory) {
           const key = item._id || item.createdAt || Math.random().toString();
           if (!seenIds.has(key)) {
             seenIds.add(key);
@@ -76,7 +94,8 @@ export default function ProfileSettings(): JSX.Element {
           }
         }
 
-        for (const item of serverHistory) {
+        // Add local items that aren't in server
+        for (const item of localHistory) {
           const key = item._id || item.createdAt || Math.random().toString();
           if (!seenIds.has(key)) {
             seenIds.add(key);
@@ -95,7 +114,8 @@ export default function ProfileSettings(): JSX.Element {
               _id: entry.id,
               title: entry.title || "Untitled",
               method: entry.method || "Unknown",
-              imageBase64: entry.image?.replace(/^data:[^;]+;base64,/, "") || undefined,
+              imageUrl: entry.image?.startsWith("http") ? entry.image : undefined,
+              imageBase64: entry.image?.startsWith("data:") ? entry.image.replace(/^data:[^;]+;base64,/, "") : (entry.image && !entry.image.startsWith("http") ? entry.image : undefined),
               mimeType: entry.image?.startsWith("data:image/png") ? "image/png" : entry.image?.startsWith("data:image/jpeg") ? "image/jpeg" : "image/png",
               createdAt: entry.createdAt,
             }));
@@ -384,45 +404,50 @@ function HistoryView({ history }: { history: UsedModel[] }): JSX.Element {
         </Panel>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
-          {history.map((item, index) => (
-            <div
-              key={item._id ?? index}
-              style={{
-                borderRadius: 12,
-                background: "rgba(43,20,76,.75)",
-                border: "1px solid rgba(198,166,247,.16)",
-                padding: 14,
-              }}
-            >
-              {item.imageBase64 && (
-                <img
-                  src={`data:${item.mimeType || "image/png"};base64,${item.imageBase64}`}
-                  alt={item.title}
-                  style={{
-                    width: "100%",
-                    height: 220,
-                    objectFit: "contain",
-                    borderRadius: 10,
-                    background: "#161616",
-                  }}
-                />
-              )}
+          {history.map((item, index) => {
+            // Prefer imageUrl (HTTP URL from DB), fall back to base64 data URL
+            const imageSrc = item.imageUrl || (item.imageBase64 ? `data:${item.mimeType || "image/png"};base64,${item.imageBase64}` : null);
+            return (
+              <div
+                key={item._id ?? index}
+                style={{
+                  borderRadius: 12,
+                  background: "rgba(43,20,76,.75)",
+                  border: "1px solid rgba(198,166,247,.16)",
+                  padding: 14,
+                }}
+              >
+                {imageSrc && (
+                  <SafeImage
+                    src={imageSrc}
+                    alt={item.title}
+                    fallbackIcon="🖼️"
+                    style={{
+                      width: "100%",
+                      height: 220,
+                      objectFit: "contain",
+                      borderRadius: 10,
+                      background: "#161616",
+                    }}
+                  />
+                )}
 
-              <strong style={{ display: "block", marginTop: 12 }}>
-                {item.title}
-              </strong>
+                <strong style={{ display: "block", marginTop: 12 }}>
+                  {item.title}
+                </strong>
 
-              <div style={{ marginTop: 6, color: "rgba(237,237,237,.55)", fontSize: 13 }}>
-                Method: {item.method}
-              </div>
-
-              {item.createdAt && (
-                <div style={{ marginTop: 4, color: "rgba(237,237,237,.4)", fontSize: 12 }}>
-                  {new Date(item.createdAt).toLocaleString()}
+                <div style={{ marginTop: 6, color: "rgba(237,237,237,.55)", fontSize: 13 }}>
+                  Method: {item.method}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {item.createdAt && (
+                  <div style={{ marginTop: 4, color: "rgba(237,237,237,.4)", fontSize: 12 }}>
+                    {new Date(item.createdAt).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

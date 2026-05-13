@@ -61,6 +61,9 @@ export default function GenerationResult(): JSX.Element {
     title?: string;
     modelPreviewKey?: string;
     garmentPreviewKey?: string;
+    frontImageId?: string;
+    rightImageId?: string;
+    groupId?: string;
     // Legacy support: direct image data (for backward compatibility)
     generatedImage?: string;
     frontImage?: string;
@@ -119,6 +122,12 @@ export default function GenerationResult(): JSX.Element {
   const saveToBackend = useCallback(async (): Promise<void> => {
     if (!validGeneratedImage || backendSaveStatus === "success") return;
 
+    // If we have generation IDs from the backend, the images are already saved in DB
+    if (state?.frontImageId || state?.rightImageId) {
+      setBackendSaveStatus("success");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -159,7 +168,7 @@ export default function GenerationResult(): JSX.Element {
     } finally {
       setSavingToBackend(false);
     }
-  }, [validGeneratedImage, method, title, backendSaveStatus]);
+  }, [validGeneratedImage, method, title, backendSaveStatus, state?.frontImageId, state?.rightImageId]);
 
   // Auto-save to backend when image arrives
   useEffect(() => {
