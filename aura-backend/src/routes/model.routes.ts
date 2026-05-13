@@ -71,7 +71,7 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
     let imageBase64: string | undefined;
 
     if (hasGarment) {
-      // ── Garment provided: use openai.images.edit() with garment as input ──
+      // Garment provided: use openai.images.edit() with garment as input
       // Strip data URL prefix if present (e.g. "data:image/png;base64,")
       const base64Raw = garmentImage.replace(/^data:[^;]+;base64,/, "");
       const buffer = Buffer.from(base64Raw, "base64");
@@ -90,7 +90,7 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
 
       imageBase64 = result.data?.[0]?.b64_json;
     } else {
-      // ── No garment: text-to-image generation ──
+      // No garment: text-to-image generation
       const result = await openai.images.generate({
         model: "gpt-image-1",
         prompt: finalPrompt,
@@ -110,6 +110,7 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
 
     const method = hasGarment ? "AI Generation + Garment" : "AI Generation";
 
+    // Store in MongoDB — return URL instead of huge base64 payload
     const saved = await Generation.create({
       userId: req.userId,
       title: `${gender} ${ethnicity} Model`,
@@ -119,11 +120,17 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
       prompt: finalPrompt,
     });
 
+    // Build the image URL from the backend's own origin
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const imageUrl = `${protocol}://${host}/api/images/${saved._id}`;
+
     return res.json({
       id: saved._id,
       title: saved.title,
       method: saved.method,
-      imageBase64,
+      imageUrl,
+      imageId: saved._id.toString(),
       mimeType: "image/png",
       createdAt: saved.createdAt,
       description: finalPrompt,
@@ -141,9 +148,21 @@ router.get("/history", requireAuth, async (req: AuthRequest, res) => {
   try {
     const history = await Generation.find({ userId: req.userId })
       .sort({ createdAt: -1 })
-      .select("_id title method imageBase64 mimeType createdAt");
+      .select("_id title method mimeType createdAt");
 
-    return res.json(history);
+    // Build imageUrl for each history item
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const historyWithUrls = history.map((item) => ({
+      _id: item._id,
+      title: item.title,
+      method: item.method,
+      mimeType: item.mimeType,
+      imageUrl: `${protocol}://${host}/api/images/${item._id}`,
+      createdAt: item.createdAt,
+    }));
+
+    return res.json(historyWithUrls);
   } catch (error) {
     return res.status(500).json({
       message: "Failed to load history",

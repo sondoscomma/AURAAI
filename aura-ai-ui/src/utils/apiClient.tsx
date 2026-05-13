@@ -3,7 +3,7 @@
  * - Automatic retry with exponential backoff
  * - Configurable timeout (long for image generation)
  * - Better error messages
- * - Base64 image validation
+ * - Support for both imageUrl (DB-stored) and imageBase64 (legacy) responses
  * - Backend health check
  */
 
@@ -31,8 +31,14 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Validate that base64 image data from the API is valid.
- * Returns the validated data URL string, or throws an error.
+ * Validate and build an image source from the API response.
+ *
+ * The backend now stores images in MongoDB and returns a URL (imageUrl).
+ * It may also still return imageBase64 for backward compatibility.
+ *
+ * Priority:
+ * 1. If `imageUrl` is present → return it directly (served from DB via /api/images/:id)
+ * 2. If `imageBase64` is present → validate and build a data URL (legacy fallback)
  */
 export function validateAndBuildImageUrl(
   data: Record<string, unknown>,
@@ -40,51 +46,48 @@ export function validateAndBuildImageUrl(
 ): string {
   const label = viewLabel ? ` for ${viewLabel}` : "";
 
-  // Check if imageBase64 exists
-  if (!data.imageBase64) {
-    throw new Error(`No image data received from server${label}. The AI may still be warming up — please try again.`);
+  // ── Priority 1: imageUrl (DB-stored image, served via endpoint) ──
+  if (data.imageUrl && typeof data.imageUrl === "string" && data.imageUrl.length > 10) {
+    return data.imageUrl;
   }
 
-  // Check type
-  if (typeof data.imageBase64 !== "string") {
-    throw new Error(`Invalid image data type received from server${label}. Expected string, got ${typeof data.imageBase64}.`);
-  }
+  // ── Priority 2: imageBase64 (legacy fallback) ──
+  if (data.imageBase64) {
+    // Check type
+    if (typeof data.imageBase64 !== "string") {
+      throw new Error(`Invalid image data type received from server${label}. Expected string, got ${typeof data.imageBase64}.`);
+    }
 
-  // Check minimum length (a valid image should have at least 100 chars of base64)
-  if (data.imageBase64.length < 100) {
-    throw new Error(
-      `Image data from server is too short${label} (${data.imageBase64.length} chars). ` +
-      `The generation may have failed — please try again.`
-    );
-  }
-
-  // Basic base64 format check
-  const base64Regex = /^[A-Za-z0-9+/=]+$/;
-  // Allow for potential whitespace or newlines in the base64 data
-  const cleanedBase64 = data.imageBase64.replace(/\s/g, "");
-  if (!base64Regex.test(cleanedBase64)) {
-    // Don't throw immediately — some APIs include headers/padding that aren't pure base64
-    // But warn if it's clearly not base64 at all
-    if (cleanedBase64.length < 50 || /^[<{]/.test(cleanedBase64)) {
+    // Check minimum length (a valid image should have at least 100 chars of base64)
+    if (data.imageBase64.length < 100) {
       throw new Error(
-        `Image data from server appears to be corrupted or in wrong format${label}. ` +
-        `Please try again.`
+        `Image data from server is too short${label} (${data.imageBase64.length} chars). ` +
+        `The generation may have failed — please try again.`
       );
     }
+
+    // Basic base64 format check
+    const base64Regex = /^[A-Za-z0-9+/=]+$/;
+    const cleanedBase64 = data.imageBase64.replace(/\s/g, "");
+    if (!base64Regex.test(cleanedBase64)) {
+      if (cleanedBase64.length < 50 || /^[<{]/.test(cleanedBase64)) {
+        throw new Error(
+          `Image data from server appears to be corrupted or in wrong format${label}. ` +
+          `Please try again.`
+        );
+      }
+    }
+
+    const mimeType = (data.mimeType as string) || "image/png";
+    return `data:${mimeType};base64,${data.imageBase64}`;
   }
 
-  const mimeType = (data.mimeType as string) || "image/png";
-  return `data:${mimeType};base64,${data.imageBase64}`;
+  // Neither imageUrl nor imageBase64 found
+  throw new Error(`No image data received from server${label}. The AI may still be warming up — please try again.`);
 }
 
 /**
  * Make a fetch request with timeout and retry logic.
- *
- * @param url - Full URL to fetch
- * @param options - Fetch options
- * @param timeoutMs - Request timeout in milliseconds
- * @param retries - Number of retry attempts
- * @returns Parsed JSON response
  */
 export async function fetchWithRetry(
   url: string,
@@ -206,7 +209,7 @@ export async function checkBackendHealth(): Promise<boolean> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-    const response = await fetch(`${API_URL}/api/health`, {
+    const response = await fetch(`${API_URL}/health`, {
       method: "GET",
       signal: controller.signal,
     });

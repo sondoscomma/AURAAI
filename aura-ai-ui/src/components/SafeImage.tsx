@@ -2,9 +2,10 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 /**
- * Validate an image source is valid (data URL or regular URL).
+ * Validate an image source is valid.
  * - For data URLs: checks that the base64 portion is substantial (>100 chars)
- * - For regular URLs (http, https, relative paths, blob:): checks minimum length
+ * - For HTTP URLs (from DB image endpoint): checks it's a valid URL
+ * - For relative paths, blob: URLs: checks minimum length
  */
 export function isValidImageSrc(src: string | null | undefined): boolean {
   if (!src || typeof src !== "string") return false;
@@ -13,8 +14,12 @@ export function isValidImageSrc(src: string | null | undefined): boolean {
     const base64Part = src.split(",")[1];
     return !!base64Part && base64Part.length > 100;
   }
-  // Accept regular URLs (http, https, relative paths like /assets/..., blob:)
-  if (src.startsWith("http") || src.startsWith("/") || src.startsWith("blob:")) {
+  // Accept HTTP(S) URLs from the backend image endpoint
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    return src.length > 10;
+  }
+  // Accept regular URLs (relative paths like /assets/..., blob:)
+  if (src.startsWith("/") || src.startsWith("blob:")) {
     return src.length > 5;
   }
   return false;
@@ -26,6 +31,8 @@ export function isValidImageSrc(src: string | null | undefined): boolean {
  */
 export function isValidBase64Image(src: string | null | undefined): boolean {
   if (!src || typeof src !== "string") return false;
+  // HTTP URLs from the DB image endpoint are always valid
+  if (src.startsWith("http://") || src.startsWith("https://")) return true;
   if (!src.startsWith("data:image/")) return false;
   const base64Part = src.split(",")[1];
   return !!base64Part && base64Part.length > 100;
@@ -96,6 +103,7 @@ export default function SafeImage(props: SafeImageProps): JSX.Element {
         src={props.src}
         alt={props.alt}
         className={props.className}
+        crossOrigin="anonymous"
         style={{
           ...props.style,
           display: loaded ? undefined : "none",

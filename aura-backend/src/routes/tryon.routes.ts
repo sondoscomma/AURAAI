@@ -1,9 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
 import OpenAI, { toFile } from "openai";
+import Generation from "../models/Generation";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 router.post("/generate", upload.array("images", 16), async (req, res) => {
   try {
@@ -27,16 +28,11 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
       )
     );
 
-    // Allow custom prompt from frontend, or use the default two-view prompt
+    // Allow custom prompt from frontend, or use the default
     const customPrompt = req.body.prompt as string | undefined;
     const prompt = customPrompt?.trim()
       ? customPrompt
-      : `Generate two virtual try-on images of the same person wearing the provided clothing:
-
-1. FRONT VIEW — A realistic front-facing full-body shot showing the person wearing the clothing. Keep the face, body shape, pose, lighting, and background realistic.
-2. RIGHT SIDE VIEW — A realistic right-side profile full-body shot of the same person wearing the same clothing, viewed from their right side. Maintain consistent lighting, clothing fit, and background style.
-
-Both images should look clean, fashionable, and suitable for an e-commerce fashion platform. Ensure the clothing appearance is consistent across both views.`;
+      : "Create a realistic virtual try-on image. Use the person from the uploaded images and dress them with the clothing from the reference images. Keep the face, body shape, pose, lighting, and background realistic. Make the final image clean, fashionable, and suitable for an e-commerce fashion platform.";
 
     const result = await openai.images.edit({
       model: "gpt-image-1",
@@ -44,22 +40,33 @@ Both images should look clean, fashionable, and suitable for an e-commerce fashi
       prompt,
       size: "1024x1536",
       quality: "high",
-      n: 2, // Request 2 images: front view + right side view
     });
 
-    if (!result.data || result.data.length < 2) {
-      return res.status(500).json({
-        message: "Expected 2 images but did not receive enough from the API.",
-      });
+    const imageBase64 = result.data?.[0]?.b64_json;
+
+    if (!imageBase64) {
+      return res.status(500).json({ message: "No image generated." });
     }
 
-    const images = result.data.map((item, index) => ({
-      view: index === 0 ? "front" : "right",
-      imageBase64: item.b64_json,
+    // Store in MongoDB and return URL instead of raw base64
+    const saved = await Generation.create({
+      title: "Virtual Try-On",
+      method: "Try-On",
+      imageBase64,
       mimeType: "image/png",
-    }));
+      prompt,
+    });
 
-    res.json({ images });
+    // Build the image URL from the backend's own origin
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const imageUrl = `${protocol}://${host}/api/images/${saved._id}`;
+
+    res.json({
+      imageUrl,
+      imageId: saved._id.toString(),
+      mimeType: "image/png",
+    });
   } catch (error: any) {
     console.error("Try-on error:", error);
 
