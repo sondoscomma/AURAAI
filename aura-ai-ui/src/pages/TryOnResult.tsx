@@ -6,6 +6,7 @@ import AuraLogo from "../components/AuraLogo";
 import { getUser } from "../components/localAuth";
 import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 import { getImage } from "../utils/imageStore";
+import { API_URL, fetchWithRetry } from "../utils/apiClient";
 
 // ─── Brand constants ───
 const COLORS = {
@@ -22,7 +23,7 @@ const FONTS = {
   secondary: "'General Sans Variable', 'Segoe UI', system-ui, sans-serif",
 };
 
-const API_URL = "https://auraai-backend-6a8n.onrender.com";
+// API_URL is now imported from apiClient
 
 // ─── Types ───
 type Direction = "front" | "right";
@@ -125,7 +126,7 @@ export default function TryOnResult(): JSX.Element {
       const imageBase64 = base64Match[1];
       const mimeType = validResultImage.match(/^data:([^;]+);/)?.[1] || "image/png";
 
-      const res = await fetch(`${API_URL}/api/models/save`, {
+      await fetchWithRetry(`${API_URL}/api/models/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,13 +139,9 @@ export default function TryOnResult(): JSX.Element {
           mimeType,
           prompt: "Virtual Try-On generation",
         }),
-      });
+      }, 30000, 2);
 
-      if (res.ok) {
-        setBackendSaveStatus("success");
-      } else {
-        setBackendSaveStatus("error");
-      }
+      setBackendSaveStatus("success");
     } catch {
       setBackendSaveStatus("error");
     } finally {

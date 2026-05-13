@@ -13,6 +13,7 @@ import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage from "../components/SafeImage";
 import { storeImage } from "../utils/imageStore";
+import { fetchGeneration, validateAndBuildImageUrl, API_URL } from "../utils/apiClient";
 
 type Filter = "All Models" | "Female" | "Male" | "Traditional Wear" | "Modern Wear";
 
@@ -228,21 +229,13 @@ export default function AuraModels(): JSX.Element {
         formData.append("images", garmentFile, "garment.png");
         formData.append("prompt", prompt);
 
-        const res = await fetch("https://auraai-backend-6a8n.onrender.com/api/tryon/generate", {
+        const data = await fetchGeneration("/api/tryon/generate", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Generation failed");
 
-        // Validate base64 data before constructing data URL
-        if (!data.imageBase64 || typeof data.imageBase64 !== "string" || data.imageBase64.length < 100) {
-          throw new Error("Received invalid image data from server");
-        }
-
-        const mimeType = data.mimeType || "image/png";
-        return `data:${mimeType};base64,${data.imageBase64}`;
+        return validateAndBuildImageUrl(data as Record<string, unknown>);
       };
 
       // Build prompt context from model attributes

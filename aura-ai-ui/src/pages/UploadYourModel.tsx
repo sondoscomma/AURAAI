@@ -5,8 +5,7 @@ import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 import { storeImage } from "../utils/imageStore";
-
-const API_URL = "https://auraai-backend-6a8n.onrender.com";
+import { fetchGeneration, validateAndBuildImageUrl, API_URL } from "../utils/apiClient";
 
 export default function UploadYourModel(): JSX.Element {
   const nav = useNavigate();
@@ -151,25 +150,13 @@ export default function UploadYourModel(): JSX.Element {
 
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${API_URL}/api/tryon/generate`, {
+    const data = await fetchGeneration("/api/tryon/generate", {
       method: "POST",
       body: formData,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message || `${viewLabel} view generation failed.`);
-    }
-
-    // Validate base64 data before constructing data URL
-    if (!data.imageBase64 || typeof data.imageBase64 !== "string" || data.imageBase64.length < 100) {
-      throw new Error(`Received invalid image data from server for ${viewLabel} view`);
-    }
-
-    const mimeType = data.mimeType || "image/png";
-    return `data:${mimeType};base64,${data.imageBase64}`;
+    return validateAndBuildImageUrl(data as Record<string, unknown>, viewLabel);
   }
 
   // ─── Generate both views ───
@@ -664,7 +651,8 @@ export default function UploadYourModel(): JSX.Element {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: "28px",
+           
+              fontSize: "28px",
                         }}
                       >
                         👕

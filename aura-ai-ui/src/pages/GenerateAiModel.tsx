@@ -5,6 +5,7 @@ import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage from "../components/SafeImage";
 import { storeImage } from "../utils/imageStore";
+import { fetchGeneration, validateAndBuildImageUrl, API_URL } from "../utils/apiClient";
 
 // Brand Colors
 const COLORS = {
@@ -193,7 +194,7 @@ export default function GenerateAiModel(): JSX.Element {
       const frontPrompt = garmentBase64
         ? `${prompt}, front view facing camera, full body shot, wearing the uploaded garment`
         : `${prompt}, front view facing camera, full body shot`;
-      const frontRes = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+      const frontData = await fetchGeneration("/api/models/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -204,12 +205,7 @@ export default function GenerateAiModel(): JSX.Element {
           prompt: frontPrompt,
         }),
       });
-      const frontData = await frontRes.json();
-      if (!frontRes.ok) throw new Error(frontData.message || "Front view generation failed");
-      if (!frontData.imageBase64 || typeof frontData.imageBase64 !== "string" || frontData.imageBase64.length < 100) {
-        throw new Error("Received invalid image data from server for front view");
-      }
-      const frontImageUrl = `data:${frontData.mimeType || "image/png"};base64,${frontData.imageBase64}`;
+      const frontImageUrl = validateAndBuildImageUrl(frontData as Record<string, unknown>, "front view");
       setFrontImage(frontImageUrl);
       setGeneratedImage(frontImageUrl);
 
@@ -217,7 +213,7 @@ export default function GenerateAiModel(): JSX.Element {
       const rightPrompt = garmentBase64
         ? `${prompt}, right side profile view, full body shot turned 90 degrees to the right, wearing the uploaded garment`
         : `${prompt}, right side profile view, full body shot turned 90 degrees to the right`;
-      const rightRes = await fetch("https://auraai-backend-6a8n.onrender.com/api/models/generate", {
+      const rightData = await fetchGeneration("/api/models/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,12 +224,7 @@ export default function GenerateAiModel(): JSX.Element {
           prompt: rightPrompt,
         }),
       });
-      const rightData = await rightRes.json();
-      if (!rightRes.ok) throw new Error(rightData.message || "Right view generation failed");
-      if (!rightData.imageBase64 || typeof rightData.imageBase64 !== "string" || rightData.imageBase64.length < 100) {
-        throw new Error("Received invalid image data from server for right view");
-      }
-      const rightImageUrl = `data:${rightData.mimeType || "image/png"};base64,${rightData.imageBase64}`;
+      const rightImageUrl = validateAndBuildImageUrl(rightData as Record<string, unknown>, "right view");
       setRightImage(rightImageUrl);
 
       setShowResultButton(true);
