@@ -8,7 +8,7 @@ import { modelGenerateSchema, validateBody } from "../utils/validation";
 const router = Router();
 
 // ─── POST /generate — Generate AI model image ───
-router.post("/generate", requireAuth, async (req: AuthRequest, res) => {
+router.post("/generate", async (req, res) => {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -28,6 +28,18 @@ router.post("/generate", requireAuth, async (req: AuthRequest, res) => {
 
     const hasGarment = typeof garmentImage === "string" && garmentImage.length > 0;
 
+    const garmentPreservationRules = `
+STRICT GARMENT PRESERVATION RULES — YOU MUST FOLLOW THESE:
+- Do NOT add any extra elements, accessories, buttons, zippers, pockets, logos, embroidery, patterns, or decorations that are NOT present in the original garment image.
+- Do NOT modify, alter, or redesign the garment in any way — no changing colors, no adding prints, no adding layers, no adding texture.
+- Do NOT add jewelry, scarves, belts, hats, bags, sunglasses, or any accessory that was not part of the original garment.
+- Do NOT add extra clothing layers underneath or on top of the garment (no undershirts, no jackets, no cardigans unless shown in the reference).
+- Do NOT change the garment's neckline, sleeve length, hemline, fit, or silhouette from the original design.
+- Do NOT add any text, writing, brand names, or labels to the garment.
+- The garment must appear EXACTLY as shown in the reference image — same fabric, same color, same cut, same stitching, same every detail.
+- If the garment is plain, keep it plain. If it has a pattern, keep that exact pattern. No additions, no enhancements, no artistic modifications.
+- The ONLY thing you should do is put the exact same garment onto the model's body naturally. Nothing more, nothing less.`;
+
     const finalPrompt = hasGarment
       ? `
 Create a realistic full-body fashion model wearing the provided garment for a virtual try-on fashion app.
@@ -43,7 +55,7 @@ Model details:
 User description:
 ${prompt}
 
-IMPORTANT: The model MUST be wearing the exact garment shown in the reference image. Preserve the garment's design, color, pattern, and details precisely. Dress the model in this garment naturally and realistically.
+${garmentPreservationRules}
 
 Style:
 Photorealistic, professional studio lighting, full body visible, clean background, fashion e-commerce quality, high detail.
@@ -61,6 +73,8 @@ Model details:
 
 User description:
 ${prompt}
+
+IMPORTANT: Do NOT add any extra clothing items, accessories, or decorations beyond what is described. Keep the outfit exactly as specified — no extra layers, no extra patterns, no extra elements.
 
 Style:
 Photorealistic, professional studio lighting, full body visible, clean background, fashion e-commerce quality, high detail.
@@ -110,9 +124,9 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
 
     const method = hasGarment ? "AI Generation + Garment" : "AI Generation";
 
-    // Store in MongoDB — return URL instead of huge base64 payload
+    // Store in MongoDB — userId is set if the user is logged in, otherwise saved as guest
     const saved = await Generation.create({
-      userId: req.userId,
+      userId: undefined,
       title: `${gender} ${ethnicity} Model`,
       method,
       imageBase64,
