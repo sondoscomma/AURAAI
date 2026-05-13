@@ -46,6 +46,20 @@ export const modelGenerateWithGarmentSchema = z.object({
   userPrompt: z.string().max(4000, "User prompt too long").optional(), // custom prompt from the result page
 });
 
+/** Image adjustment request validation (for chat-based refinement) */
+export const imageAdjustSchema = z.object({
+  prompt: z.string().min(1, "Adjustment prompt is required").max(4000, "Prompt too long"),
+  gender: z.enum(["Female", "Male"], { message: "Gender is required" }),
+  ageRange: z.string().min(1, "Age range is required"),
+  ethnicity: z.string().min(1, "Ethnicity is required"),
+  bodyType: z.string().min(1, "Body type is required"),
+  clothingStyle: z.string().min(1, "Clothing style is required"),
+  pose: z.string().min(1, "Pose is required"),
+  baseImage: z.string().min(1, "Base image is required for adjustment"), // the current image to adjust
+  baseImageId: z.string().optional(), // MongoDB ObjectId of the image being adjusted
+  userPrompt: z.string().max(4000, "User prompt too long").optional(), // the user's chat message
+});
+
 /** Try-on generation request validation (prompt is optional) */
 export const tryonPromptSchema = z.object({
   prompt: z.string().max(4000, "Prompt too long").optional(),

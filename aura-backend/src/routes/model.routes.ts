@@ -3,7 +3,7 @@ import OpenAI, { toFile } from "openai";
 import Generation from "../models/Generation";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 import { buildImageUrl } from "../utils/buildImageUrl";
-import { modelGenerateSchema, modelGenerateWithGarmentSchema, validateBody } from "../utils/validation";
+import { modelGenerateSchema, modelGenerateWithGarmentSchema, imageAdjustSchema, validateBody } from "../utils/validation";
 
 const router = Router();
 
@@ -275,6 +275,150 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
 
     const status = error?.status || 500;
     const message = error?.message || "OpenAI generation with garment failed";
+
+    return res.status(status).json({ message });
+  }
+});
+
+// ─── POST /adjust — Adjust a previously generated image based on chat prompt ───
+// Takes the current image (baseImage) and a user's adjustment request to produce a refined image.
+// Used by the GarmentChatAdjust page for interactive image refinement.
+router.post("/adjust", async (req, res) => {
+  try {
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        message: "Server configuration error: Missing API key",
+      });
+    }
+
+    // Validate request body
+    const parsed = validateBody(imageAdjustSchema, req.body);
+    const { prompt, gender, ageRange, ethnicity, bodyType, clothingStyle, pose, baseImage } = parsed;
+
+    // Optional: groupId for linking related generations
+    const groupId = typeof req.body.groupId === "string" && req.body.groupId.length > 0 ? req.body.groupId : null;
+
+    // Optional: baseImageId reference to the image being adjusted
+    const baseImageId = typeof req.body.baseImageId === "string" && req.body.baseImageId.length > 0 ? req.body.baseImageId : null;
+
+    // The userPrompt is the chat message from the user
+    const userPrompt = typeof req.body.userPrompt === "string" ? req.body.userPrompt : "";
+
+    const hasBaseImage = typeof baseImage === "string" && baseImage.length > 0;
+
+    if (!hasBaseImage) {
+      return res.status(400).json({
+        message: "Base image is required for adjustment",
+      });
+    }
+
+    const preservationRules = `
+STRICT IMAGE PRESERVATION RULES — YOU MUST FOLLOW THESE:
+- This is an ADJUSTMENT to an existing generated image. Preserve the model's identity, facial features, skin tone, and body proportions.
+- Preserve the garment/outfit EXACTLY as it appears in the base image — do NOT change its color, style, pattern, or design.
+- Only apply the specific change requested by the user. Do NOT add any extra elements, accessories, or modifications not requested.
+- If the user asks to change the pose, only change the pose — keep everything else the same.
+- If the user asks to change the background, only change the background — keep the model and garment the same.
+- If the user asks to add an accessory, only add that specific accessory — do not add any others.
+- Do NOT change the garment's neckline, sleeve length, hemline, fit, or silhouette.
+- The result should look like the same model in the same outfit, with only the requested adjustment applied.`;
+
+    const finalPrompt = `
+Adjust this AI-generated fashion model image for a virtual try-on fashion app.
+
+Model details:
+- Gender: ${gender}
+- Age range: ${ageRange}
+- Ethnicity: ${ethnicity}
+- Body type: ${bodyType}
+- Clothing style: ${clothingStyle}
+- Pose: ${pose}
+
+User's adjustment request:
+${userPrompt || prompt}
+
+${preservationRules}
+
+Style:
+Photorealistic, professional studio lighting, full body visible, clean background, fashion e-commerce quality, high detail.
+`;
+
+    const openai = new OpenAI({ apiKey });
+
+    // Build the array of image files for the edit API
+    const imageFiles: any[] = [];
+
+    // Add base image (the current image to adjust)
+    let baseBuffer: Buffer;
+    if (baseImage.startsWith("http")) {
+      const response = await fetch(baseImage);
+      const arrayBuffer = await response.arrayBuffer();
+      baseBuffer = Buffer.from(arrayBuffer);
+    } else {
+      const baseBase64Raw = baseImage.replace(/^data:[^;]+;base64,/, "");
+      baseBuffer = Buffer.from(baseBase64Raw, "base64");
+    }
+    const baseFile = await toFile(baseBuffer, "current_image.png", {
+      type: "image/png",
+    });
+    imageFiles.push(baseFile);
+
+    // Use openai.images.edit() with the current image as input
+    const result = await openai.images.edit({
+      model: "gpt-image-1",
+      image: imageFiles,
+      prompt: finalPrompt,
+      size: "1024x1536",
+      quality: "high",
+    });
+
+    const imageBase64 = result.data?.[0]?.b64_json;
+
+    if (!imageBase64) {
+      return res.status(500).json({
+        message: "No image returned from OpenAI",
+      });
+    }
+
+    const method = "AI Adjustment";
+
+    // Store in MongoDB
+    const saved = await Generation.create({
+      userId: undefined,
+      title: `Adjusted ${gender} ${ethnicity} Model`,
+      method,
+      imageBase64,
+      mimeType: "image/png",
+      prompt: finalPrompt,
+      direction: "front",
+      groupId,
+      baseImageId: baseImageId || null,
+      userPrompt: userPrompt,
+    });
+
+    const imageUrl = buildImageUrl(req, saved._id.toString());
+
+    return res.json({
+      id: saved._id,
+      title: saved.title,
+      method: saved.method,
+      imageUrl,
+      imageId: saved._id.toString(),
+      mimeType: "image/png",
+      createdAt: saved.createdAt,
+      description: finalPrompt,
+      direction: "front",
+      groupId,
+      baseImageId: baseImageId || null,
+      userPrompt: userPrompt,
+    });
+  } catch (error: any) {
+    console.error("OpenAI image adjustment error:", error);
+
+    const status = error?.status || 500;
+    const message = error?.message || "OpenAI image adjustment failed";
 
     return res.status(status).json({ message });
   }

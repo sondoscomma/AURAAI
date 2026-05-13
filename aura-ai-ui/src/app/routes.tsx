@@ -22,6 +22,7 @@ import ProfileSettings from "../pages/ProfileSettings";
 import GenerationResult from "../pages/GenerationResult";
 import GenerationResultForModel from "../pages/GenerationResultForModel";
 import TryOnResult from "../pages/TryOnResult";
+import GarmentChatAdjust from "../pages/Garchat";
 
 export const routes: RouteObject[] = [
   {
@@ -43,6 +44,7 @@ export const routes: RouteObject[] = [
       { path: "/app/generation-result", element: <GenerationResult /> },
       { path: "/app/generation-result-model", element: <GenerationResultForModel /> },
       { path: "/app/tryon-result", element: <TryOnResult /> },
+      { path: "/app/garment-chat-adjust", element: <GarmentChatAdjust /> },
       { path: "/app/profile", element: <ProfileSettings /> },
     ],
   },

@@ -5,7 +5,7 @@ import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 import { getUser } from "../components/localAuth";
-import { getImage } from "../utils/imageStore";
+import { getImage, storeImage } from "../utils/imageStore";
 import { API_URL, fetchWithRetry, fetchGeneration, validateAndBuildImageUrl } from "../utils/apiClient";
 
 // ─── Brand constants ───
@@ -971,7 +971,28 @@ export default function GenerationResult(): JSX.Element {
 
                   {garmentResultImage && (
                     <button
-                      onClick={() => handleDownload(garmentResultImage)}
+                      onClick={() => {
+                        const garmentImageKey = garmentResultImage ? storeImage(garmentResultImage) : null;
+                        const originalImageKey = mainImage ? storeImage(mainImage) : null;
+                        nav("/app/garment-chat-adjust", {
+                          state: {
+                            garmentImageKey,
+                            originalImageKey,
+                            method: "AI Generation + Garment",
+                            title,
+                            frontImageId,
+                            garmentResultImageId,
+                            groupId,
+                            gender: modelGender,
+                            ageRange: modelAgeRange,
+                            ethnicity: modelEthnicity,
+                            bodyType: modelBodyType,
+                            clothingStyle: modelClothingStyle,
+                            pose: modelPose,
+                            prompt: state?.prompt,
+                          },
+                        });
+                      }}
                       style={{
                         height: 48,
                         borderRadius: 10,
@@ -998,7 +1019,7 @@ export default function GenerationResult(): JSX.Element {
                         e.currentTarget.style.transform = "translateY(0)";
                       }}
                     >
-                      {"\u2B07"} Download Garment Result
+                      {"\u27A1"} Continue
                     </button>
                   )}
 

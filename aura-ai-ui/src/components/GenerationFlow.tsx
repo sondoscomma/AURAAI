@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 
-export type FlowStep = 1 | 2 | 3 | 4;
+export type FlowStep = 1 | 2 | 3 | 4 | 5;
 
 interface StepDef {
   id: number;
@@ -10,9 +10,10 @@ interface StepDef {
 
 const steps: StepDef[] = [
   { id: 1, title: "Choose Model", subtitle: "Select your model source" },
-  { id: 2, title: "Upload Garment", subtitle: "Upload clothing reference" },
-  { id: 3, title: "Generate & Customize", subtitle: "Create your try-on" },
+  { id: 2, title: "Generate Model", subtitle: "Create your AI model" },
+  { id: 3, title: "Try on Garment", subtitle: "Upload garment & customize" },
   { id: 4, title: "Results & Download", subtitle: "Save your result" },
+  { id: 5, title: "Adjust & Refine", subtitle: "Chat to fine-tune" },
 ];
 
 interface GenerationFlowProps {
@@ -173,11 +174,13 @@ export default function GenerationFlow({ activeStep }: GenerationFlowProps): JSX
           {activeStep === 1 &&
             "Select how you want to create or choose the model for your virtual try-on experience."}
           {activeStep === 2 &&
-            "Upload a garment image that you want to try on the selected model. You can drag and drop or click to browse."}
+            "Describe your desired model attributes and generate your AI model with a front view."}
           {activeStep === 3 &&
-            "Customize your generation settings and create your virtual try-on image."}
+            "Upload a garment image and customize your prompt to try on the garment on your generated model."}
           {activeStep === 4 &&
             "Your result is ready! Download or share your virtual try-on image."}
+          {activeStep === 5 &&
+            "Use the chat to request adjustments like changing the pose, background, or lighting. Your garment and model will be preserved."}
         </p>
       </div>
     </aside>
