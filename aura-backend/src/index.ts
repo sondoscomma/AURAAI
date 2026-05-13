@@ -11,6 +11,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust the Render.com reverse proxy so req.protocol returns 'https'
+app.set("trust proxy", 1);
+
 // Increase payload limit for base64 garment images in JSON body
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));

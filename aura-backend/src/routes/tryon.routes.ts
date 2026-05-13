@@ -6,6 +6,21 @@ import Generation from "../models/Generation";
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
+/**
+ * Build the full image URL for a generation ID.
+ * Uses BASE_URL env variable if set (recommended for production behind proxies).
+ * Falls back to req.protocol + req.get('host').
+ */
+function buildImageUrl(req: any, generationId: any): string {
+  const baseUrl = process.env.BASE_URL;
+  if (baseUrl) {
+    return `${baseUrl}/api/images/${generationId}`;
+  }
+  const protocol = req.protocol;
+  const host = req.get("host");
+  return `${protocol}://${host}/api/images/${generationId}`;
+}
+
 router.post("/generate", upload.array("images", 16), async (req, res) => {
   try {
     const openai = new OpenAI({
@@ -57,10 +72,8 @@ router.post("/generate", upload.array("images", 16), async (req, res) => {
       prompt,
     });
 
-    // Build the image URL from the backend's own origin
-    const protocol = req.protocol;
-    const host = req.get("host");
-    const imageUrl = `${protocol}://${host}/api/images/${saved._id}`;
+    // Build the image URL — uses BASE_URL env or falls back to request headers
+    const imageUrl = buildImageUrl(req, saved._id);
 
     res.json({
       imageUrl,

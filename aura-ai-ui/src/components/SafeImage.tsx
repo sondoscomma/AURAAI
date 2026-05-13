@@ -103,7 +103,6 @@ export default function SafeImage(props: SafeImageProps): JSX.Element {
         src={props.src}
         alt={props.alt}
         className={props.className}
-        crossOrigin="anonymous"
         style={{
           ...props.style,
           display: loaded ? undefined : "none",

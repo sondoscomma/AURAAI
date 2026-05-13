@@ -76,7 +76,7 @@ export default function GenerationResult(): JSX.Element {
   const modelPreview = getImage(state?.modelPreviewKey) || state?.modelPreview || null;
   const garmentPreview = getImage(state?.garmentPreviewKey) || state?.garmentPreview || null;
 
-  // Validate images
+  // Validate images (now accepts both HTTP URLs and base64 data URLs)
   const validGeneratedImage = isValidBase64Image(generatedImage) ? generatedImage : null;
   const validFrontImage = frontImageFromStore && isValidBase64Image(frontImageFromStore) ? frontImageFromStore : null;
   const validRightImage = rightImageFromStore && isValidBase64Image(rightImageFromStore) ? rightImageFromStore : null;
@@ -125,7 +125,13 @@ export default function GenerationResult(): JSX.Element {
     try {
       setSavingToBackend(true);
 
-      // Extract base64 from data URL
+      // If the image is already an HTTP URL (stored in DB), no need to save again
+      if (validGeneratedImage!.startsWith("http")) {
+        setBackendSaveStatus("success");
+        return;
+      }
+
+      // Legacy: Extract base64 from data URL and save
       const base64Match = validGeneratedImage!.match(/^data:[^;]+;base64,(.+)$/);
       if (!base64Match) return;
 
@@ -163,24 +169,39 @@ export default function GenerationResult(): JSX.Element {
   }, [validGeneratedImage, backendSaveStatus, saveToBackend]);
 
   // ─── Download handlers ───
-  const handleDownload = (): void => {
+  const handleDownload = async (): Promise<void> => {
     if (!validGeneratedImage) return;
-    const link = document.createElement("a");
-    link.href = validGeneratedImage;
-    link.download = `aura-ai-model-${activeDirection}-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      if (validGeneratedImage.startsWith("http")) {
+        // For HTTP URLs: fetch as blob and create an object URL for download
+        const response = await fetch(validGeneratedImage);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = `aura-ai-model-${activeDirection}-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        // For base64 data URLs: direct download
+        const link = document.createElement("a");
+        link.href = validGeneratedImage;
+        link.download = `aura-ai-model-${activeDirection}-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch {
+      // Fallback: open in new tab
+      window.open(validGeneratedImage, "_blank");
+    }
   };
 
-  const handleDownloadAll = (): void => {
+  const handleDownloadAll = async (): Promise<void> => {
     if (!validGeneratedImage) return;
-    const link = document.createElement("a");
-    link.href = validGeneratedImage;
-    link.download = `aura-ai-model-all-views-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await handleDownload();
   };
 
   // ─── Direction transform CSS ───

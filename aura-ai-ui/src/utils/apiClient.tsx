@@ -48,7 +48,14 @@ export function validateAndBuildImageUrl(
 
   // ── Priority 1: imageUrl (DB-stored image, served via endpoint) ──
   if (data.imageUrl && typeof data.imageUrl === "string" && data.imageUrl.length > 10) {
-    return data.imageUrl;
+    // Normalize: if the URL uses http:// but the API uses https://, fix it.
+    // This handles the case where the backend is behind a proxy (Render.com)
+    // and doesn't have trust proxy configured or BASE_URL set.
+    let imageUrl = data.imageUrl as string;
+    if (imageUrl.startsWith("http://") && API_URL.startsWith("https://")) {
+      imageUrl = imageUrl.replace(/^http:\/\//, "https://");
+    }
+    return imageUrl;
   }
 
   // ── Priority 2: imageBase64 (legacy fallback) ──

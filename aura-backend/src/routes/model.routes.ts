@@ -5,6 +5,22 @@ import { requireAuth, type AuthRequest } from "../middleware/auth";
 
 const router = Router();
 
+/**
+ * Build the full image URL for a generation ID.
+ * Uses BASE_URL env variable if set (recommended for production behind proxies).
+ * Falls back to req.protocol + req.get('host').
+ */
+function buildImageUrl(req: any, generationId: any): string {
+  const baseUrl = process.env.BASE_URL;
+  if (baseUrl) {
+    return `${baseUrl}/api/images/${generationId}`;
+  }
+  // Fallback: construct from request (now works correctly with trust proxy)
+  const protocol = req.protocol;
+  const host = req.get("host");
+  return `${protocol}://${host}/api/images/${generationId}`;
+}
+
 router.post("/generate", requireAuth, async (req: AuthRequest, res) => {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -120,10 +136,8 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
       prompt: finalPrompt,
     });
 
-    // Build the image URL from the backend's own origin
-    const protocol = req.protocol;
-    const host = req.get("host");
-    const imageUrl = `${protocol}://${host}/api/images/${saved._id}`;
+    // Build the image URL — uses BASE_URL env or falls back to request headers
+    const imageUrl = buildImageUrl(req, saved._id);
 
     return res.json({
       id: saved._id,
@@ -151,14 +165,12 @@ router.get("/history", requireAuth, async (req: AuthRequest, res) => {
       .select("_id title method mimeType createdAt");
 
     // Build imageUrl for each history item
-    const protocol = req.protocol;
-    const host = req.get("host");
     const historyWithUrls = history.map((item) => ({
       _id: item._id,
       title: item.title,
       method: item.method,
       mimeType: item.mimeType,
-      imageUrl: `${protocol}://${host}/api/images/${item._id}`,
+      imageUrl: buildImageUrl(req, item._id),
       createdAt: item.createdAt,
     }));
 
