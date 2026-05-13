@@ -197,12 +197,31 @@ export default function UploadYourModel(): JSX.Element {
     }
   }
 
-  function downloadResult(image: string | null, filename: string): void {
+  async function downloadResult(image: string | null, filename: string): Promise<void> {
     if (!image) return;
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = filename;
-    link.click();
+    try {
+      if (image.startsWith("http")) {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch {
+      window.open(image, "_blank");
+    }
   }
 
   // Determine which step is active based on generation state

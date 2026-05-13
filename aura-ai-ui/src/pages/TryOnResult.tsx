@@ -119,7 +119,13 @@ export default function TryOnResult(): JSX.Element {
     try {
       setSavingToBackend(true);
 
-      // Extract base64 from data URL
+      // If the image is already an HTTP URL (stored in DB), no need to save again
+      if (validResultImage.startsWith("http")) {
+        setBackendSaveStatus("success");
+        return;
+      }
+
+      // Legacy: Extract base64 from data URL and save
       const base64Match = validResultImage.match(/^data:[^;]+;base64,(.+)$/);
       if (!base64Match) return;
 
@@ -157,32 +163,46 @@ export default function TryOnResult(): JSX.Element {
   }, [validResultImage, backendSaveStatus, saveToBackend]);
 
   // ─── Download helper ───
-  const downloadImage = (imageUrl: string, filename: string): void => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadImage = async (imageUrl: string, filename: string): Promise<void> => {
+    try {
+      if (imageUrl.startsWith("http")) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        const link = document.createElement("a");
+        link.href = imageUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch {
+      window.open(imageUrl, "_blank");
+    }
   };
 
-  const handleDownload = (): void => {
+  const handleDownload = async (): Promise<void> => {
     if (!activeImage) return;
-    downloadImage(activeImage, `aura-tryon-${activeDirection}-${Date.now()}.png`);
+    await downloadImage(activeImage, `aura-tryon-${activeDirection}-${Date.now()}.png`);
   };
 
-  const handleDownloadAll = (): void => {
+  const handleDownloadAll = async (): Promise<void> => {
     const frontImg = validFrontImage || validResultImage;
     const rightImg = validRightImage || validResultImage;
     if (frontImg) {
-      downloadImage(frontImg, `aura-tryon-front-${Date.now()}.png`);
+      await downloadImage(frontImg, `aura-tryon-front-${Date.now()}.png`);
     }
-    // Small delay so browser doesn't block the second download
-    setTimeout(() => {
-      if (rightImg) {
-        downloadImage(rightImg, `aura-tryon-right-${Date.now()}.png`);
-      }
-    }, 300);
+    if (rightImg) {
+      await downloadImage(rightImg, `aura-tryon-right-${Date.now()}.png`);
+    }
   };
 
   // Get the correct image for the active direction

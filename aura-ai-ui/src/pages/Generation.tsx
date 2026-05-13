@@ -7,6 +7,7 @@ import aiImg from "../assets/genration/ai.png";
 import modelsImg from "../assets/genration/models.png";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
+import SafeImage from "../components/SafeImage";
 
 /* ─────────────── CSS keyframe styles injected once ─────────────── */
 function InjectStyles(): JSX.Element {
@@ -138,7 +139,7 @@ function ChoiceCard({
           borderRadius: "12px 12px 0 0",
         }}
       >
-        <img
+        <SafeImage
           src={image}
           alt={title}
           style={{
@@ -362,9 +363,9 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
-                { name: "Sondos AbuTeir", initials: "SA", color: "#A78BFA", role: "web development and designation", delay: "0.1s" },
-                { name: "Raghad Ibrahim", initials: "RI", color: "#818CF8", role: "web development and designation", delay: "0.2s" },
-                { name: "Reem Abu Shapap", initials: "RA", color: "#C084FC", role: "web development and designation", delay: "0.3s" },
+                { name: "Sondos AbuTeir", initials: "SA", color: "#A78BFA", role: "Lead Developer", delay: "0.1s" },
+                { name: "Raghad Ibrahim", initials: "RI", color: "#818CF8", role: "AI Engineer", delay: "0.2s" },
+                { name: "Reem Abu Shapap", initials: "RA", color: "#C084FC", role: "UI/UX Designer", delay: "0.3s" },
               ].map((dev) => (
                 <div
                   key={dev.name}
@@ -442,7 +443,7 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }): 
               color: "rgba(255,255,255,0.4)",
             }}
           >
-            AURA AI {"\u00B7"} Virtual Fashion Try-On Platform {"\u00B7"} 2026
+            AURA AI {"\u00B7"} Virtual Fashion Try-On Platform {"\u00B7"} 2024
           </div>
         </div>
       </div>
@@ -490,13 +491,18 @@ export default function Generation(): JSX.Element {
     if (!selected) return;
 
     if (selected === "aura") {
-      // AURA Models → go to model selection page first
+      // AURA Models → go to model selection page
       nav("/app/aura-models", {
         state: { selected },
       });
+    } else if (selected === "generate") {
+      // Generate AI Model → go directly (garment upload built into the page)
+      nav("/app/generate-ai-model", {
+        state: { selected },
+      });
     } else {
-      // Upload Your Model / Generate AI Model → go to Upload Garment page
-      nav("/app/upload-garment", {
+      // Upload Your Model → go directly (garment upload built into the page)
+      nav("/app/upload-your-model", {
         state: { selected },
       });
     }
@@ -747,7 +753,7 @@ export default function Generation(): JSX.Element {
                   }
                 }}
               >
-                Choose model
+                Continue
                 <span>&rarr;</span>
               </button>
             </div>
