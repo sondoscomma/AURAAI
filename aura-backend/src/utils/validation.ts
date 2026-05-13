@@ -32,6 +32,19 @@ export const modelGenerateSchema = z.object({
   garmentImage: z.string().optional(), // base64 data URL, optional
 });
 
+/** Model generation with garment request validation */
+export const modelGenerateWithGarmentSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required").max(4000, "Prompt too long"),
+  gender: z.enum(["Female", "Male"], { message: "Gender is required" }),
+  ageRange: z.string().min(1, "Age range is required"),
+  ethnicity: z.string().min(1, "Ethnicity is required"),
+  bodyType: z.string().min(1, "Body type is required"),
+  clothingStyle: z.string().min(1, "Clothing style is required"),
+  pose: z.string().min(1, "Pose is required"),
+  garmentImage: z.string().min(1, "Garment image is required"), // base64 data URL, required
+  baseImage: z.string().optional(), // base64 data URL or HTTP URL of previously generated model, optional
+});
+
 /** Try-on generation request validation (prompt is optional) */
 export const tryonPromptSchema = z.object({
   prompt: z.string().max(4000, "Prompt too long").optional(),

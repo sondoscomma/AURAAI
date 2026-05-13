@@ -3,7 +3,7 @@ import OpenAI, { toFile } from "openai";
 import Generation from "../models/Generation";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 import { buildImageUrl } from "../utils/buildImageUrl";
-import { modelGenerateSchema, validateBody } from "../utils/validation";
+import { modelGenerateSchema, modelGenerateWithGarmentSchema, validateBody } from "../utils/validation";
 
 const router = Router();
 
@@ -155,6 +155,170 @@ Photorealistic, professional studio lighting, full body visible, clean backgroun
 
     const status = error?.status || 500;
     const message = error?.message || "OpenAI image generation failed";
+
+    return res.status(status).json({ message });
+  }
+});
+
+// ─── POST /generate-with-garment — Generate AI model with garment + base image + prompt ───
+// This endpoint takes a previously generated AI model image, a garment image, and an optional prompt
+// to produce a new image with the garment on the model
+router.post("/generate-with-garment", async (req, res) => {
+  try {
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        message: "Server configuration error: Missing API key",
+      });
+    }
+
+    // Validate request body
+    const parsed = validateBody(modelGenerateWithGarmentSchema, req.body);
+    const { prompt, gender, ageRange, ethnicity, bodyType, clothingStyle, pose, garmentImage, baseImage } = parsed;
+
+    // Optional: direction and groupId
+    const direction = (req.body.direction === "front" || req.body.direction === "right") ? req.body.direction : null;
+    const groupId = typeof req.body.groupId === "string" && req.body.groupId.length > 0 ? req.body.groupId : null;
+
+    const hasGarment = typeof garmentImage === "string" && garmentImage.length > 0;
+    const hasBaseImage = typeof baseImage === "string" && baseImage.length > 0;
+
+    if (!hasGarment) {
+      return res.status(400).json({
+        message: "Garment image is required for generate-with-garment endpoint",
+      });
+    }
+
+    const garmentPreservationRules = `
+STRICT GARMENT PRESERVATION RULES — YOU MUST FOLLOW THESE:
+- Do NOT add any extra elements, accessories, buttons, zippers, pockets, logos, embroidery, patterns, or decorations that are NOT present in the original garment image.
+- Do NOT modify, alter, or redesign the garment in any way — no changing colors, no adding prints, no adding layers, no adding texture.
+- Do NOT add jewelry, scarves, belts, hats, bags, sunglasses, or any accessory that was not part of the original garment.
+- Do NOT add extra clothing layers underneath or on top of the garment (no undershirts, no jackets, no cardigans unless shown in the reference).
+- Do NOT change the garment's neckline, sleeve length, hemline, fit, or silhouette from the original design.
+- Do NOT add any text, writing, brand names, or labels to the garment.
+- The garment must appear EXACTLY as shown in the reference image — same fabric, same color, same cut, same stitching, same every detail.
+- If the garment is plain, keep it plain. If it has a pattern, keep that exact pattern. No additions, no enhancements, no artistic modifications.
+- The ONLY thing you should do is put the exact same garment onto the model's body naturally. Nothing more, nothing less.`;
+
+    const baseImageInstruction = hasBaseImage
+      ? `
+IMPORTANT — BASE IMAGE REFERENCE:
+A previously generated AI model image is provided as the base/reference image. You MUST:
+- Maintain the same model appearance (face, body type, pose, ethnicity) as shown in the base image.
+- Keep the same model identity and characteristics.
+- The model should look like the same person from the base image, now wearing the uploaded garment.
+- Do NOT change the model's facial features, skin tone, or body proportions from the base image.
+`
+      : "";
+
+    const finalPrompt = `
+Create a realistic full-body fashion model wearing the provided garment for a virtual try-on fashion app.
+
+Model details:
+- Gender: ${gender}
+- Age range: ${ageRange}
+- Ethnicity: ${ethnicity}
+- Body type: ${bodyType}
+- Clothing style: ${clothingStyle}
+- Pose: ${pose}
+
+User description:
+${prompt}
+
+${baseImageInstruction}
+
+${garmentPreservationRules}
+
+Style:
+Photorealistic, professional studio lighting, full body visible, clean background, fashion e-commerce quality, high detail.
+`;
+
+    const openai = new OpenAI({ apiKey });
+
+    let imageBase64: string | undefined;
+
+    // Build the array of image files for the edit API
+    const imageFiles: any[] = [];
+
+    // Add garment image
+    const garmentBase64Raw = garmentImage.replace(/^data:[^;]+;base64,/, "");
+    const garmentBuffer = Buffer.from(garmentBase64Raw, "base64");
+    const garmentFile = await toFile(garmentBuffer, "garment.png", {
+      type: "image/png",
+    });
+    imageFiles.push(garmentFile);
+
+    // Add base image if provided (the previously generated model)
+    if (hasBaseImage) {
+      const baseBase64Raw = baseImage.replace(/^data:[^;]+;base64,/, "");
+      // Also handle HTTP URLs for base image - fetch it first
+      let baseBuffer: Buffer;
+      if (baseImage.startsWith("http")) {
+        // Fetch the image from URL
+        const response = await fetch(baseImage);
+        const arrayBuffer = await response.arrayBuffer();
+        baseBuffer = Buffer.from(arrayBuffer);
+      } else {
+        baseBuffer = Buffer.from(baseBase64Raw, "base64");
+      }
+      const baseFile = await toFile(baseBuffer, "base_model.png", {
+        type: "image/png",
+      });
+      imageFiles.push(baseFile);
+    }
+
+    // Use openai.images.edit() with garment (and optionally base image) as input
+    const result = await openai.images.edit({
+      model: "gpt-image-1",
+      image: imageFiles,
+      prompt: finalPrompt,
+      size: "1024x1536",
+      quality: "high",
+    });
+
+    imageBase64 = result.data?.[0]?.b64_json;
+
+    if (!imageBase64) {
+      return res.status(500).json({
+        message: "No image returned from OpenAI",
+      });
+    }
+
+    const method = "AI Generation + Garment";
+
+    // Store in MongoDB
+    const saved = await Generation.create({
+      userId: undefined,
+      title: `${gender} ${ethnicity} Model with Garment`,
+      method,
+      imageBase64,
+      mimeType: "image/png",
+      prompt: finalPrompt,
+      direction: direction || "front",
+      groupId,
+    });
+
+    const imageUrl = buildImageUrl(req, saved._id.toString());
+
+    return res.json({
+      id: saved._id,
+      title: saved.title,
+      method: saved.method,
+      imageUrl,
+      imageId: saved._id.toString(),
+      mimeType: "image/png",
+      createdAt: saved.createdAt,
+      description: finalPrompt,
+      direction: direction || "front",
+      groupId,
+    });
+  } catch (error: any) {
+    console.error("OpenAI generate-with-garment error:", error);
+
+    const status = error?.status || 500;
+    const message = error?.message || "OpenAI generation with garment failed";
 
     return res.status(status).json({ message });
   }
