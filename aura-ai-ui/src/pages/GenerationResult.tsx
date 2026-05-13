@@ -1,8 +1,11 @@
-import type { JSX, CSSProperties } from "react";
+import type { JSX } from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
+import AuraLogo from "../components/AuraLogo";
+import SafeImage, { isValidBase64Image } from "../components/SafeImage";
 import { getUser } from "../components/localAuth";
+import { getImage } from "../utils/imageStore";
 
 // ─── Brand constants ───
 const COLORS = {
@@ -23,7 +26,7 @@ const FONTS = {
 const API_URL = "https://auraai-backend-6a8n.onrender.com";
 
 // ─── Types ───
-type Direction = "front" | "back" | "left" | "right";
+type Direction = "front" | "right";
 
 interface DirectionTab {
   id: Direction;
@@ -33,8 +36,6 @@ interface DirectionTab {
 
 const DIRECTIONS: DirectionTab[] = [
   { id: "front", label: "Front View", icon: "\u{1F464}" },
-  { id: "left", label: "Left View", icon: "\u2B05" },
-  { id: "back", label: "Back View", icon: "\u{1F504}" },
   { id: "right", label: "Right View", icon: "\u27A1" },
 ];
 
@@ -50,15 +51,37 @@ export default function GenerationResult(): JSX.Element {
   >("idle");
 
   // Get the generated image from navigation state
+  // Images are stored in the ImageStore; only keys are passed via router state
   const state = location.state as {
-    generatedImage?: string;
+    generatedImageKey?: string;
+    frontImageKey?: string;
+    rightImageKey?: string;
     method?: string;
     title?: string;
+    modelPreviewKey?: string;
+    garmentPreviewKey?: string;
+    // Legacy support: direct image data (for backward compatibility)
+    generatedImage?: string;
+    frontImage?: string;
+    rightImage?: string;
+    modelPreview?: string;
+    garmentPreview?: string;
   } | null;
 
-  const generatedImage = state?.generatedImage || null;
+  // Retrieve images from ImageStore using keys, with fallback to direct data
+  const generatedImage = getImage(state?.generatedImageKey) || state?.generatedImage || null;
+  const frontImageFromStore = getImage(state?.frontImageKey) || state?.frontImage || null;
+  const rightImageFromStore = getImage(state?.rightImageKey) || state?.rightImage || null;
+  const modelPreview = getImage(state?.modelPreviewKey) || state?.modelPreview || null;
+  const garmentPreview = getImage(state?.garmentPreviewKey) || state?.garmentPreview || null;
+
+  // Validate images
+  const validGeneratedImage = isValidBase64Image(generatedImage) ? generatedImage : null;
+  const validFrontImage = frontImageFromStore && isValidBase64Image(frontImageFromStore) ? frontImageFromStore : null;
+  const validRightImage = rightImageFromStore && isValidBase64Image(rightImageFromStore) ? rightImageFromStore : null;
   const method = state?.method || "AI Generation";
   const title = state?.title || "AI Generated Model";
+  const hasSourceImages = !!(modelPreview || garmentPreview);
 
   // Get current user for scoped storage
   const currentUser = getUser();
@@ -68,14 +91,14 @@ export default function GenerationResult(): JSX.Element {
 
   // ─── Save to user-scoped localStorage ───
   useEffect(() => {
-    if (generatedImage && !savedToHistory) {
+    if (validGeneratedImage && !savedToHistory) {
       try {
         const existing = localStorage.getItem(userKey);
         const history = existing ? JSON.parse(existing) : [];
 
         const newEntry = {
           id: Date.now().toString(),
-          image: generatedImage,
+          image: validGeneratedImage,
           method,
           title,
           createdAt: new Date().toISOString(),
@@ -89,11 +112,11 @@ export default function GenerationResult(): JSX.Element {
         // Silently fail if localStorage is unavailable
       }
     }
-  }, [generatedImage, method, title, savedToHistory, userKey, currentUser]);
+  }, [validGeneratedImage, method, title, savedToHistory, userKey, currentUser]);
 
   // ─── Save to backend for the logged-in user ───
   const saveToBackend = useCallback(async (): Promise<void> => {
-    if (!generatedImage || backendSaveStatus === "success") return;
+    if (!validGeneratedImage || backendSaveStatus === "success") return;
 
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -102,11 +125,11 @@ export default function GenerationResult(): JSX.Element {
       setSavingToBackend(true);
 
       // Extract base64 from data URL
-      const base64Match = generatedImage.match(/^data:[^;]+;base64,(.+)$/);
+      const base64Match = validGeneratedImage!.match(/^data:[^;]+;base64,(.+)$/);
       if (!base64Match) return;
 
       const imageBase64 = base64Match[1];
-      const mimeType = generatedImage.match(/^data:([^;]+);/)?.[1] || "image/png";
+      const mimeType = validGeneratedImage!.match(/^data:([^;]+);/)?.[1] || "image/png";
 
       const res = await fetch(`${API_URL}/api/models/save`, {
         method: "POST",
@@ -133,20 +156,20 @@ export default function GenerationResult(): JSX.Element {
     } finally {
       setSavingToBackend(false);
     }
-  }, [generatedImage, method, title, backendSaveStatus]);
+  }, [validGeneratedImage, method, title, backendSaveStatus]);
 
   // Auto-save to backend when image arrives
   useEffect(() => {
-    if (generatedImage && backendSaveStatus === "idle") {
+    if (validGeneratedImage && backendSaveStatus === "idle") {
       saveToBackend();
     }
-  }, [generatedImage, backendSaveStatus, saveToBackend]);
+  }, [validGeneratedImage, backendSaveStatus, saveToBackend]);
 
   // ─── Download handlers ───
   const handleDownload = (): void => {
-    if (!generatedImage) return;
+    if (!validGeneratedImage) return;
     const link = document.createElement("a");
-    link.href = generatedImage;
+    link.href = validGeneratedImage;
     link.download = `aura-ai-model-${activeDirection}-${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
@@ -154,9 +177,9 @@ export default function GenerationResult(): JSX.Element {
   };
 
   const handleDownloadAll = (): void => {
-    if (!generatedImage) return;
+    if (!validGeneratedImage) return;
     const link = document.createElement("a");
-    link.href = generatedImage;
+    link.href = validGeneratedImage;
     link.download = `aura-ai-model-all-views-${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
@@ -164,20 +187,14 @@ export default function GenerationResult(): JSX.Element {
   };
 
   // ─── Direction transform CSS ───
-  const getTransformStyle = (dir: Direction): CSSProperties => {
-    switch (dir) {
-      case "front":
-        return { transform: "scaleX(1)" };
-      case "back":
-        return { transform: "scaleX(-1)" };
-      case "left":
-        return { transform: "perspective(800px) rotateY(15deg)" };
-      case "right":
-        return { transform: "perspective(800px) rotateY(-15deg)" };
-      default:
-        return {};
-    }
+  // Get the correct image for the active direction
+  const getActiveImage = (): string | null => {
+    const frontImg = validFrontImage || validGeneratedImage;
+    const rightImg = validRightImage || validGeneratedImage;
+    return activeDirection === "front" ? frontImg : rightImg;
   };
+
+  const activeImage = getActiveImage();
 
   return (
     <div
@@ -209,21 +226,7 @@ export default function GenerationResult(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 20,
-              fontWeight: 700,
-            }}
-          >
-            {"\u2728"}
-          </div>
+          <AuraLogo size={40} />
           <div>
             <div
               style={{
@@ -366,7 +369,7 @@ export default function GenerationResult(): JSX.Element {
                     }}
                   >
                     Your AI model has been generated successfully. View it from
-                    every direction.
+                    front and right angles.
                   </p>
                 </div>
               </div>
@@ -512,7 +515,7 @@ export default function GenerationResult(): JSX.Element {
                   overflow: "hidden",
                 }}
               >
-                {generatedImage ? (
+                {validGeneratedImage ? (
                   <>
                     {/* Direction indicator badge */}
                     <div
@@ -539,8 +542,8 @@ export default function GenerationResult(): JSX.Element {
                       }
                     </div>
 
-                    <img
-                      src={generatedImage}
+                    <SafeImage
+                      src={activeImage || validGeneratedImage}
                       alt={`Generated model - ${activeDirection} view`}
                       style={{
                         maxWidth: "100%",
@@ -548,8 +551,7 @@ export default function GenerationResult(): JSX.Element {
                         objectFit: "contain",
                         borderRadius: 12,
                         transition:
-                          "transform 0.5s cubic-bezier(0.16,1,0.3,1)",
-                        ...getTransformStyle(activeDirection),
+                          "opacity 0.4s cubic-bezier(0.16,1,0.3,1)",
                       }}
                     />
 
@@ -570,7 +572,7 @@ export default function GenerationResult(): JSX.Element {
                       >
                         {activeDirection}
                       </span>{" "}
-                      direction
+                      angle
                     </div>
                   </>
                 ) : (
@@ -671,6 +673,110 @@ export default function GenerationResult(): JSX.Element {
                   </div>
                 </div>
 
+                {/* Source images card (Model + Garment) */}
+                {hasSourceImages && (
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      border: "1px solid rgba(237,237,237,0.12)",
+                      background: "rgba(43,20,76,0.2)",
+                      padding: 24,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: COLORS.secondary,
+                        marginBottom: 16,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {"\u25B0"} Source Images
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: modelPreview && garmentPreview ? "1fr 1fr" : "1fr",
+                        gap: 12,
+                      }}
+                    >
+                      {modelPreview && (
+                        <div
+                          style={{
+                            borderRadius: 10,
+                            border: "1px solid rgba(237,237,237,0.08)",
+                            background: "rgba(43,20,76,0.15)",
+                            padding: 12,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <SafeImage
+                            src={modelPreview}
+                            alt="Selected model"
+                            fallbackIcon="👤"
+                            style={{
+                              width: "100%",
+                              height: 100,
+                              objectFit: "contain",
+                              borderRadius: 6,
+                              background: "rgba(22,22,22,0.5)",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: "rgba(237,237,237,0.5)",
+                            }}
+                          >
+                            {"\u{1F464}"} Model
+                          </span>
+                        </div>
+                      )}
+                      {garmentPreview && (
+                        <div
+                          style={{
+                            borderRadius: 10,
+                            border: "1px solid rgba(237,237,237,0.08)",
+                            background: "rgba(43,20,76,0.15)",
+                            padding: 12,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <SafeImage
+                            src={garmentPreview}
+                            alt="Uploaded garment"
+                            fallbackIcon="👕"
+                            style={{
+                              width: "100%",
+                              height: 100,
+                              objectFit: "contain",
+                              borderRadius: 6,
+                              background: "rgba(22,22,22,0.5)",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: "rgba(237,237,237,0.5)",
+                            }}
+                          >
+                            {"\u{1F455}"} Garment
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Direction preview thumbnails */}
                 <div
                   style={{
@@ -697,76 +803,81 @@ export default function GenerationResult(): JSX.Element {
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
-                      gap: 10,
+                      gap: 12,
                     }}
                   >
-                    {DIRECTIONS.map((dir) => (
-                      <button
-                        key={dir.id}
-                        onClick={() => setActiveDirection(dir.id)}
-                        style={{
-                          borderRadius: 10,
-                          border:
-                            activeDirection === dir.id
-                              ? "1px solid rgba(198,166,247,0.6)"
-                              : "1px solid rgba(237,237,237,0.08)",
-                          background:
-                            activeDirection === dir.id
-                              ? "rgba(198,166,247,0.15)"
-                              : "rgba(43,20,76,0.15)",
-                          padding: 12,
-                          cursor: "pointer",
-                          transition: "all 0.3s ease",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (activeDirection !== dir.id) {
-                            e.currentTarget.style.background =
-                              "rgba(43,20,76,0.3)";
-                            e.currentTarget.style.borderColor =
-                              "rgba(198,166,247,0.3)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (activeDirection !== dir.id) {
-                            e.currentTarget.style.background =
-                              "rgba(43,20,76,0.15)";
-                            e.currentTarget.style.borderColor =
-                              "rgba(237,237,237,0.08)";
-                          }
-                        }}
-                      >
-                        {generatedImage && (
-                          <img
-                            src={generatedImage}
-                            alt={dir.label}
-                            style={{
-                              width: "100%",
-                              height: 80,
-                              objectFit: "cover",
-                              borderRadius: 6,
-                              ...getTransformStyle(dir.id),
-                            }}
-                          />
-                        )}
-                        <span
+                    {DIRECTIONS.map((dir) => {
+                      const dirImg = dir.id === "front"
+                        ? (validFrontImage || validGeneratedImage)
+                        : (validRightImage || validGeneratedImage);
+                      return (
+                        <button
+                          key={dir.id}
+                          onClick={() => setActiveDirection(dir.id)}
                           style={{
-                            fontSize: 11,
-                            fontWeight:
-                              activeDirection === dir.id ? 600 : 400,
-                            color:
+                            borderRadius: 10,
+                            border:
                               activeDirection === dir.id
-                                ? COLORS.secondary
-                                : "rgba(237,237,237,0.5)",
+                                ? "1px solid rgba(198,166,247,0.6)"
+                                : "1px solid rgba(237,237,237,0.08)",
+                            background:
+                              activeDirection === dir.id
+                                ? "rgba(198,166,247,0.15)"
+                                : "rgba(43,20,76,0.15)",
+                            padding: 12,
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (activeDirection !== dir.id) {
+                              e.currentTarget.style.background =
+                                "rgba(43,20,76,0.3)";
+                              e.currentTarget.style.borderColor =
+                                "rgba(198,166,247,0.3)";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (activeDirection !== dir.id) {
+                              e.currentTarget.style.background =
+                                "rgba(43,20,76,0.15)";
+                              e.currentTarget.style.borderColor =
+                                "rgba(237,237,237,0.08)";
+                            }
                           }}
                         >
-                          {dir.icon} {dir.label}
-                        </span>
-                      </button>
-                    ))}
+                          {dirImg && (
+                            <SafeImage
+                              src={dirImg}
+                              alt={dir.label}
+                              fallbackIcon={dir.icon}
+                              style={{
+                                width: "100%",
+                                height: 100,
+                                objectFit: "cover",
+                                borderRadius: 6,
+                              }}
+                            />
+                          )}
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight:
+                                activeDirection === dir.id ? 600 : 400,
+                              color:
+                                activeDirection === dir.id
+                                  ? COLORS.secondary
+                                  : "rgba(237,237,237,0.5)",
+                            }}
+                          >
+                            {dir.icon} {dir.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -780,14 +891,14 @@ export default function GenerationResult(): JSX.Element {
                 >
                   <button
                     onClick={handleDownload}
-                    disabled={!generatedImage}
+                    disabled={!validGeneratedImage}
                     style={{
                       height: 48,
                       borderRadius: 10,
                       border: "1px solid rgba(198,166,247,0.3)",
                       background: "rgba(198,166,247,0.15)",
                       color: COLORS.platinum,
-                      cursor: generatedImage ? "pointer" : "not-allowed",
+                      cursor: validGeneratedImage ? "pointer" : "not-allowed",
                       fontSize: 14,
                       fontWeight: 600,
                       fontFamily: FONTS.primary,
@@ -796,17 +907,17 @@ export default function GenerationResult(): JSX.Element {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
-                      opacity: generatedImage ? 1 : 0.45,
+                      opacity: validGeneratedImage ? 1 : 0.45,
                     }}
                     onMouseEnter={(e) => {
-                      if (generatedImage) {
+                      if (validGeneratedImage) {
                         e.currentTarget.style.background =
                           "rgba(198,166,247,0.25)";
                         e.currentTarget.style.borderColor = COLORS.secondary;
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (generatedImage) {
+                      if (validGeneratedImage) {
                         e.currentTarget.style.background =
                           "rgba(198,166,247,0.15)";
                         e.currentTarget.style.borderColor =
@@ -819,14 +930,14 @@ export default function GenerationResult(): JSX.Element {
 
                   <button
                     onClick={handleDownloadAll}
-                    disabled={!generatedImage}
+                    disabled={!validGeneratedImage}
                     style={{
                       height: 48,
                       borderRadius: 10,
                       border: "none",
                       background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)`,
                       color: "#fff",
-                      cursor: generatedImage ? "pointer" : "not-allowed",
+                      cursor: validGeneratedImage ? "pointer" : "not-allowed",
                       fontSize: 14,
                       fontWeight: 700,
                       fontFamily: FONTS.primary,
@@ -836,17 +947,17 @@ export default function GenerationResult(): JSX.Element {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
-                      opacity: generatedImage ? 1 : 0.45,
+                      opacity: validGeneratedImage ? 1 : 0.45,
                     }}
                     onMouseEnter={(e) => {
-                      if (generatedImage) {
+                      if (validGeneratedImage) {
                         e.currentTarget.style.boxShadow =
                           "0 12px 48px rgba(198,166,247,0.35)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (generatedImage) {
+                      if (validGeneratedImage) {
                         e.currentTarget.style.boxShadow =
                           "0 8px 32px rgba(198,166,247,0.25)";
                         e.currentTarget.style.transform = "translateY(0)";
@@ -970,4 +1081,3 @@ function DetailRow(props: {
     </div>
   );
 }
-

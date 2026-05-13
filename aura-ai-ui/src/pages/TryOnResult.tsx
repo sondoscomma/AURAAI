@@ -5,6 +5,7 @@ import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import { getUser } from "../components/localAuth";
 import SafeImage, { isValidBase64Image } from "../components/SafeImage";
+import { getImage } from "../utils/imageStore";
 
 // ─── Brand constants ───
 const COLORS = {
@@ -49,7 +50,14 @@ export default function TryOnResult(): JSX.Element {
   const [activeDirection, setActiveDirection] = useState<Direction>("front");
 
   // Get the try-on result image from navigation state
+  // Images are stored in ImageStore; only keys are passed via router state
   const state = location.state as {
+    resultImageKey?: string;
+    frontImageKey?: string;
+    rightImageKey?: string;
+    personPreviewKey?: string;
+    garmentPreviewKey?: string;
+    // Legacy support: direct image data
     resultImage?: string;
     frontImage?: string;
     rightImage?: string;
@@ -57,14 +65,17 @@ export default function TryOnResult(): JSX.Element {
     garmentPreview?: string;
   } | null;
 
-  const resultImage = state?.resultImage || state?.frontImage || null;
-  const personPreview = state?.personPreview || null;
-  const garmentPreview = state?.garmentPreview || null;
+  // Retrieve images from ImageStore using keys, with fallback to direct data
+  const resultImage = getImage(state?.resultImageKey) || state?.resultImage || getImage(state?.frontImageKey) || state?.frontImage || null;
+  const personPreview = getImage(state?.personPreviewKey) || state?.personPreview || null;
+  const garmentPreview = getImage(state?.garmentPreviewKey) || state?.garmentPreview || null;
 
   // Validate the result images
   const validResultImage = isValidBase64Image(resultImage) ? resultImage : null;
-  const validFrontImage = state?.frontImage && isValidBase64Image(state.frontImage) ? state.frontImage : null;
-  const validRightImage = state?.rightImage && isValidBase64Image(state.rightImage) ? state.rightImage : null;
+  const frontImageData = getImage(state?.frontImageKey) || state?.frontImage || null;
+  const rightImageData = getImage(state?.rightImageKey) || state?.rightImage || null;
+  const validFrontImage = frontImageData && isValidBase64Image(frontImageData) ? frontImageData : null;
+  const validRightImage = rightImageData && isValidBase64Image(rightImageData) ? rightImageData : null;
 
   // Get current user for scoped storage
   const currentUser = getUser();

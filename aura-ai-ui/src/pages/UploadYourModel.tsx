@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage, { isValidBase64Image } from "../components/SafeImage";
+import { storeImage } from "../utils/imageStore";
 
 const API_URL = "https://auraai-backend-6a8n.onrender.com";
 
@@ -953,16 +954,21 @@ export default function UploadYourModel(): JSX.Element {
 
                   {showResultButton && (
                     <button
-                      onClick={() =>
+                      onClick={() => {
+                        // Store images in memory and pass only keys via router state
+                        const frontImageKey = frontImage ? storeImage(frontImage) : null;
+                        const rightImageKey = rightImage ? storeImage(rightImage) : null;
+                        const personPreviewKey = personPreview ? storeImage(personPreview) : null;
+                        const garmentPreviewKey = garmentPreview ? storeImage(garmentPreview) : null;
                         nav("/app/tryon-result", {
                           state: {
-                            frontImage,
-                            rightImage,
-                            personPreview,
-                            garmentPreview,
+                            frontImageKey,
+                            rightImageKey,
+                            personPreviewKey,
+                            garmentPreviewKey,
                           },
-                        })
-                      }
+                        });
+                      }}
                       style={{
                         height: 48,
                         padding: "0 28px",

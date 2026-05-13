@@ -5,6 +5,7 @@ import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import { getUser } from "../components/localAuth";
 import SafeImage, { isValidBase64Image } from "../components/SafeImage";
+import { getImage } from "../utils/imageStore";
 
 // ─── Brand constants ───
 const COLORS = {
@@ -40,9 +41,14 @@ const DIRECTIONS: DirectionTab[] = [
 
 // ─── Navigation state type ───
 interface ResultState {
+  frontImageKey?: string;
+  rightImageKey?: string;
+  modelName?: string;
+  modelPreviewKey?: string;
+  garmentPreviewKey?: string;
+  // Legacy support: direct image data
   frontImage?: string;
   rightImage?: string;
-  modelName?: string;
   modelPreview?: string;
   garmentPreview?: string;
 }
@@ -59,13 +65,15 @@ export default function GenerationResultForModel(): JSX.Element {
   >("idle");
 
   // Get data from navigation state
+  // Images are stored in ImageStore; only keys are passed via router state
   const state = location.state as ResultState | null;
 
-  const frontImage = state?.frontImage || null;
-  const rightImage = state?.rightImage || null;
+  // Retrieve images from ImageStore using keys, with fallback to direct data
+  const frontImage = getImage(state?.frontImageKey) || state?.frontImage || null;
+  const rightImage = getImage(state?.rightImageKey) || state?.rightImage || null;
   const modelName = state?.modelName || "AURA Model";
-  const modelPreview = state?.modelPreview || null;
-  const garmentPreview = state?.garmentPreview || null;
+  const modelPreview = getImage(state?.modelPreviewKey) || state?.modelPreview || null;
+  const garmentPreview = getImage(state?.garmentPreviewKey) || state?.garmentPreview || null;
 
   // Validate generated images (must be data URLs from API)
   const validFrontImage = isValidBase64Image(frontImage) ? frontImage : null;

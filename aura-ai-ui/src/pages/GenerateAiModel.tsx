@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage from "../components/SafeImage";
+import { storeImage } from "../utils/imageStore";
 
 // Brand Colors
 const COLORS = {
@@ -726,17 +727,21 @@ export default function GenerateAiModel(): JSX.Element {
                       </button>
                       {showResultButton && (
                         <button
-                          onClick={() =>
+                          onClick={() => {
+                            // Store images in memory and pass only keys via router state
+                            const generatedImageKey = generatedImage ? storeImage(generatedImage) : null;
+                            const frontImageKey = frontImage ? storeImage(frontImage) : null;
+                            const rightImageKey = rightImage ? storeImage(rightImage) : null;
                             nav("/app/generation-result", {
                               state: {
-                                generatedImage,
-                                frontImage,
-                                rightImage,
+                                generatedImageKey,
+                                frontImageKey,
+                                rightImageKey,
                                 method: "AI Generation",
                                 title: `${gender} ${ethnicity} Model`,
                               },
-                            })
-                          }
+                            });
+                          }}
                           style={{
                             height: 44,
                             padding: "0 24px",

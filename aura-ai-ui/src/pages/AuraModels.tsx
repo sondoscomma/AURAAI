@@ -12,6 +12,7 @@ import saraImg from "../assets/models/female-modern-3.png";
 import GenerationFlow from "../components/GenerationFlow";
 import AuraLogo from "../components/AuraLogo";
 import SafeImage from "../components/SafeImage";
+import { storeImage } from "../utils/imageStore";
 
 type Filter = "All Models" | "Female" | "Male" | "Traditional Wear" | "Modern Wear";
 
@@ -256,14 +257,21 @@ export default function AuraModels(): JSX.Element {
         throw new Error("One or both views failed to generate");
       }
 
-      // Navigate to AURA Model result page with both images
+      // Store images in memory and pass only keys via router state
+      // (avoids corruption from browser History API size limits)
+      const frontImageKey = storeImage(frontImageUrl);
+      const rightImageKey = storeImage(rightImageUrl);
+      const garmentPreviewKey = garmentPreview ? storeImage(garmentPreview) : null;
+      const modelPreviewKey = model.image ? storeImage(model.image) : null;
+
+      // Navigate to AURA Model result page with image keys (not raw data)
       nav("/app/generation-result-model", {
         state: {
-          frontImage: frontImageUrl,
-          rightImage: rightImageUrl,
+          frontImageKey,
+          rightImageKey,
           modelName: model.name,
-          garmentPreview,
-          modelPreview: model.image,
+          garmentPreviewKey,
+          modelPreviewKey,
         },
       });
     } catch (err) {
