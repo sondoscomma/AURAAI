@@ -24,7 +24,6 @@ const FONTS = {
   secondary: "'General Sans Variable', 'Segoe UI', system-ui, sans-serif",
 };
 
-
 // ─── Main component ───
 export default function GenerationResult(): JSX.Element {
   const nav = useNavigate();
@@ -54,7 +53,6 @@ export default function GenerationResult(): JSX.Element {
   // Get the generated image from navigation state
   const state = location.state as {
     generatedImageKey?: string;
-    frontImageKey?: string;
     method?: string;
     title?: string;
     frontImageId?: string;
@@ -69,19 +67,16 @@ export default function GenerationResult(): JSX.Element {
     prompt?: string;
     // Legacy support: direct image data
     generatedImage?: string;
-    frontImage?: string;
   } | null;
 
   // Retrieve images from ImageStore using keys, with fallback to direct data
   const generatedImage = getImage(state?.generatedImageKey) || state?.generatedImage || null;
-  const frontImageFromStore = getImage(state?.frontImageKey) || state?.frontImage || null;
 
   // Validate images
   const validGeneratedImage = isValidBase64Image(generatedImage) ? generatedImage : null;
-  const validFrontImage = frontImageFromStore && isValidBase64Image(frontImageFromStore) ? frontImageFromStore : null;
 
-  // The main display image is the front image or generated image
-  const mainImage = validFrontImage || validGeneratedImage;
+  // The main display image is the generated image (front view only)
+  const mainImage = validGeneratedImage;
 
   const method = state?.method || "AI Generation";
   const title = state?.title || "AI Generated Model";
@@ -174,10 +169,13 @@ export default function GenerationResult(): JSX.Element {
         clothingStyle: modelClothingStyle,
         pose: modelPose,
         prompt: fullPrompt,
-        direction: "front",
         garmentImage: garmentBase64,
         // Pass the base image (previously generated model) for reference
         baseImage: mainImage,
+        // Pass the baseImageId so the backend can link generations
+        baseImageId: frontImageId,
+        // Pass the user's custom prompt separately for storage
+        userPrompt: garmentPrompt.trim(),
         groupId,
       };
 

@@ -150,6 +150,8 @@ app.get("/api/generations/:id", async (req, res) => {
       prompt: generation.prompt,
       direction: generation.direction,
       groupId: generation.groupId,
+      baseImageId: generation.baseImageId || null,
+      userPrompt: generation.userPrompt || "",
       createdAt: generation.createdAt,
       updatedAt: generation.updatedAt,
     });
@@ -170,7 +172,7 @@ app.get("/api/generations/group/:groupId", async (req, res) => {
 
     const generations = await Generation.find({ groupId })
       .sort({ direction: 1, createdAt: 1 })
-      .select("_id title method mimeType prompt direction groupId createdAt");
+      .select("_id title method mimeType prompt direction groupId baseImageId userPrompt createdAt");
 
     if (generations.length === 0) {
       return res.status(404).json({ message: "No generations found for this group" });
@@ -186,6 +188,8 @@ app.get("/api/generations/group/:groupId", async (req, res) => {
       prompt: item.prompt,
       direction: item.direction,
       groupId: item.groupId,
+      baseImageId: item.baseImageId || null,
+      userPrompt: item.userPrompt || "",
       createdAt: item.createdAt,
     }));
 
@@ -193,6 +197,28 @@ app.get("/api/generations/group/:groupId", async (req, res) => {
   } catch (error) {
     console.error("Get generation group error:", error);
     return res.status(500).json({ message: "Failed to fetch generation group" });
+  }
+});
+
+// ─── DELETE /api/generations/:id — Delete a generation by ID ───
+app.delete("/api/generations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid generation ID format" });
+    }
+
+    const generation = await Generation.findByIdAndDelete(id);
+
+    if (!generation) {
+      return res.status(404).json({ message: "Generation not found" });
+    }
+
+    return res.json({ message: "Generation deleted successfully", id: generation._id });
+  } catch (error) {
+    console.error("Delete generation error:", error);
+    return res.status(500).json({ message: "Failed to delete generation" });
   }
 });
 

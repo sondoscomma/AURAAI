@@ -70,7 +70,6 @@ interface PanelProps {
 export default function GenerateAiModel(): JSX.Element {
   const nav = useNavigate();
 
-  // Get route state from previous page (if any)
 
   const [prompt, setPrompt] = useState("");
   const [gender, setGender] = useState<Gender>("Female");
@@ -81,7 +80,6 @@ export default function GenerateAiModel(): JSX.Element {
   const [pose, setPose] = useState("Standing Straight");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [frontImage, setFrontImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [showResultButton, setShowResultButton] = useState(false);
@@ -105,8 +103,6 @@ export default function GenerateAiModel(): JSX.Element {
       prev.trim() ? `${prev.trim()}, ${text.toLowerCase()}` : text
     );
   }
-
-
 
   async function handleGenerate(): Promise<void> {
     try {
@@ -134,7 +130,7 @@ export default function GenerateAiModel(): JSX.Element {
         authHeaders["Authorization"] = `Bearer ${token}`;
       }
 
-      // Generate front view only
+      // Generate front view only (no garment upload on this page)
       const frontPrompt = `${prompt}, front view facing camera, full body shot`;
       const frontData = await fetchGeneration("/api/models/generate", {
         method: "POST",
@@ -148,7 +144,6 @@ export default function GenerateAiModel(): JSX.Element {
       const frontImageUrl = validateAndBuildImageUrl(frontData as Record<string, unknown>, "front view");
       const frontId = (frontData as Record<string, unknown>).imageId as string;
       const gId = (frontData as Record<string, unknown>).groupId as string;
-      setFrontImage(frontImageUrl);
       setFrontImageId(frontId);
       setGeneratedImage(frontImageUrl);
       setGroupId(gId);
@@ -285,7 +280,7 @@ export default function GenerateAiModel(): JSX.Element {
         }}
       >
         {/* LEFT SIDEBAR - Generation Flow with dynamic step */}
-        <GenerationFlow activeStep={showResultButton ? 4 : 3} />
+        <GenerationFlow activeStep={showResultButton ? 3 : 2} />
 
         {/* CENTER - MAIN CONTENT */}
         <main
@@ -663,11 +658,9 @@ export default function GenerateAiModel(): JSX.Element {
                           onClick={() => {
                             // Store images in memory and pass only keys via router state
                             const generatedImageKey = generatedImage ? storeImage(generatedImage) : null;
-                            const frontImageKey = frontImage ? storeImage(frontImage) : null;
                             nav("/app/generation-result", {
                               state: {
                                 generatedImageKey,
-                                frontImageKey,
                                 method: "AI Generation",
                                 title: `${gender} ${ethnicity} Model`,
                                 // Pass generation ID so result page can fetch from backend

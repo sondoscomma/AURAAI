@@ -20,7 +20,7 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-/** Model generation request validation */
+/** Model generation request validation (no garment — garment is on the result page) */
 export const modelGenerateSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(4000, "Prompt too long"),
   gender: z.enum(["Female", "Male"], { message: "Gender is required" }),
@@ -29,7 +29,6 @@ export const modelGenerateSchema = z.object({
   bodyType: z.string().min(1, "Body type is required"),
   clothingStyle: z.string().min(1, "Clothing style is required"),
   pose: z.string().min(1, "Pose is required"),
-  garmentImage: z.string().optional(), // base64 data URL, optional
 });
 
 /** Model generation with garment request validation */
@@ -43,6 +42,8 @@ export const modelGenerateWithGarmentSchema = z.object({
   pose: z.string().min(1, "Pose is required"),
   garmentImage: z.string().min(1, "Garment image is required"), // base64 data URL, required
   baseImage: z.string().optional(), // base64 data URL or HTTP URL of previously generated model, optional
+  baseImageId: z.string().optional(), // MongoDB ObjectId of the previously generated model, optional
+  userPrompt: z.string().max(4000, "User prompt too long").optional(), // custom prompt from the result page
 });
 
 /** Try-on generation request validation (prompt is optional) */
